@@ -1,0 +1,618 @@
+  <div>	          
+  
+  	    @include('livewire.compras-resumen.configurar-columnas')
+		@include('livewire.compras-resumen.agregar-pago')
+		@include('livewire.gastos.estado-pedido-pos')
+	    @include('livewire.reports.variaciones')
+	    
+	    
+	               @if($accion == 0)
+                        <div class="page-header mt-2" style="width: 100% !important;">
+							<div class="page-title">
+								<h4>COMPRAS</h4>
+								<h6>Listado de compras</h6>
+							</div>
+							<div class="page-btn">
+							    @if(Auth::user()->sucursal != 1 )
+								<a href="{{ url('compras') }}" class="btn btn-added">
+									<img src="{{ asset('assets/pos/img/icons/plus.svg') }}" alt="img">Agregar nueva compra
+								</a>							    
+							    @else
+								<a href="{{ url('compras-elegir') }}" class="btn btn-added">
+									<img src="{{ asset('assets/pos/img/icons/plus.svg') }}" alt="img">Agregar nueva compra
+								</a>
+								@endif
+							</div>
+						</div>
+						
+						<div class="row">
+						<div class="col-lg-3 col-sm-6 col-12">
+							<div class="dash-widget">
+								<div class="dash-widgetimg">
+									<span style="background-color: #63738112 !important;">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8ea0af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clipboard"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
+								</div>
+								<div class="dash-widgetcontent">
+									<h5  style="margin-bottom: 0px !important;"><span class="counters" data-count="{{ $suma_compras_cantidades ?: 0 }}">{{$suma_compras_cantidades ?: 0}}</span></h5>
+									<h6>Cantidad de compras</h6>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3 col-sm-6 col-12">
+							<div class="dash-widget dash2">
+								<div class="dash-widgetimg">
+									<span><text style="font-size:24px; color: #00cfe8">P</text></span>
+								</div>
+								<div class="dash-widgetcontent">
+									<h5   style="margin-bottom: 0px !important;" >$ {{number_format($suma_compras_pagas,2)}} </h5>
+									<h6>Compras Pagas</h6>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3 col-sm-6 col-12">
+							<div class="dash-widget dash3">
+								<div class="dash-widgetimg">
+								<span>
+								    <text style="font-size:24px; color: #ed6a6b;">D</text>
+								</span>
+								</div>
+								<div class="dash-widgetcontent">
+									<h5  style="margin-bottom: 0px !important;" >$ {{number_format($suma_compras_deuda,2)}} </span></h5>
+									<h6>Compras Adeudadas</h6>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3 col-sm-6 col-12">
+							<div class="dash-widget dash1">
+								<div class="dash-widgetimg">
+									<span>
+						            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00cd5c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-dollar-sign"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+						            </span>
+						         </div>
+								<div class="dash-widgetcontent">
+									<h5 style="margin-bottom: 0px !important;" >$ {{number_format($suma_compras_totales,2)}} </h5>
+									<h6>Compras totales</h6>
+								</div>
+							</div>
+						</div>
+					
+					    </div>
+
+						<!-- /product list -->
+						<div class="card">
+							<div class="card-body">
+								<div class="table-top">
+    								<div class="search-set">
+    									<div class="search-path">
+    									    @include('common.boton-filtros')
+    									</div>
+    									<input type="text" autocomplete="off" wire:model="search" placeholder="Buscar.." class="form-control"	>
+    									<div hidden class="search-input">
+    										<a class="btn btn-searchset"><img src="{{ asset('assets/pos/img/icons/search-white.svg') }}" alt="img"></a>
+    									</div>
+    								</div>
+									<div class="wordset">
+										<ul>
+											<li hidden>
+												<a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf"><img src="{{ asset('assets/pos/img/icons/pdf.svg') }}"  alt="img"></a>
+											</li>
+											<li>
+											    										    <a 
+											style="font-size:12px !important; padding:5px !important; background: #198754 !important;" 
+											class="btn btn-cancel" 
+											wire:click="ExportarReporte('{{ ( ($search == '' ? '0' : $search) . '/' . ($proveedor_elegido == '' ? '0' : $proveedor_elegido)  .  '/' . ($estado_pago == '' ? '0' : ($estado_pago == 'Pago' ? '1' : '2')) . '/'  . $dateFrom . '/' . $dateTo) }}')"  title="Descargar Excel"  data-bs-placement="top" title="exportar excel"> 
+											<svg style="margin-right: 5px;"  xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+											Exportar </a>
+											
+												<a hidden data-bs-toggle="tooltip" wire:click="ExportarReporte('{{ ( ($search == '' ? '0' : $search) . '/' . ($proveedor_elegido == '' ? '0' : $proveedor_elegido)  .  '/' . ($estado_pago == '' ? '0' : ($estado_pago == 'Pago' ? '1' : '2')) . '/'  . $dateFrom . '/' . $dateTo) }}')" data-bs-placement="top" title="excel"><img src="{{ asset('assets/pos/img/icons/excel.svg') }}" alt="img"></a>
+											</li>
+											<li hidden>
+												<a data-bs-toggle="tooltip" data-bs-placement="top" title="print"><img src="{{ asset('assets/pos/img/icons/printer.svg') }}" alt="img"></a>
+											</li>
+										</ul>
+									</div>
+								</div>
+								<!-- /Filter -->
+								<div class="card" @if(!$mostrarFiltros) hidden @endif >
+									<div class="card-body pb-0">
+										<div class="row">
+										
+											<div class="col-lg col-sm-6 col-12">
+												<div class="form-group">
+													<label>Proveedor</label>
+                            						<select wire:model='proveedor_elegido' class="form-control">
+                            							<option value="Elegir" disabled >Elegir</option>
+                            							<option value="0" >Todos</option>
+                            							<option value="2" >Casa central</option>
+                            							@foreach($prov as $pr)
+                            							<option value="{{$pr->id}}">{{$pr->nombre}}</option>
+                            							@endforeach
+                            						</select>
+												</div>
+											</div>
+										
+											<div class="col-lg col-sm-6 col-12">
+											<div class="form-group">
+                    						<label>Estado de pago</label>
+                    
+                    								<select wire:model="estado_pago" class="form-control">
+                    									<option value="">Todos</option>
+                    									<option value="Pendiente">Pendiente</option>
+                    									<option value="Pago">Pagos</option>
+                    
+                    							</select>
+												</div>
+											</div>
+											
+											<div class="col-lg col-sm-6 col-12">
+											<div class="form-group">
+                    						<label>Rango de fechas</label>
+						                      <input type="text" id="date-range-picker" name="date_range" />
+											</div>
+											</div>
+											
+																						
+                    						<div hidden class="col-lg col-sm-6 col-12">
+                    						<div class="form-group">
+                    						<label>Etiquetas</label>
+                    						
+											</div>
+											</div>
+											
+											
+											<div class="col-lg-2 col-sm-6 col-12">
+												<div class="form-group">
+												    <label style="margin-top: 28px !important;"></label>
+													<a class="btn btn-light" wire:click="LimpiarFiltros">LIMPIAR</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+									<div class="row justify-content-between">						                
+                                	<!---------- ACCIONES EN LOTE -------->
+                                	<div class="col-10">
+                                	<div style="padding-left: 0;" class="col-12 ml-0">
+                                						<div  class="input-group mt-2 mb-1">
+                                							<select style="padding: 0px 6px; border-color: #bfc9d4;" type="text" wire:model.defer="accion_lote" placeholder="Acciones en lote">
+                                								<option value="Elegir">Acciones en lote</option>
+                                								
+                                								@if($estado_filtro == 0)
+                                								<option value="1">Eliminar</option>
+                                								@endif
+                                								@if($estado_filtro == 1)
+                                								<option value="0">Restaurar</option>
+                                								@endif
+                                
+                                								</select>
+                                							<div class="input-group-append">
+                                								<button style="background:white; border: solid 1px #bfc9d4;" onclick="ConfirmAccionEnLote()" type="button">Aplicar</button>
+                                							</div>
+                                						</div>
+                                
+                                					</div>
+                                	<input value="{{$estado_filtro}}" id="id_accion" type="hidden">    
+                                	</div>
+                                	
+                                
+                                	<!------------------------------------>
+                                
+                                    <!---------- FILTRO DE ESTADO -------->
+                                	
+                                	<div id="accion-lote" class="col-2 mt-2 ">
+                                	<div>
+                                	<div style="padding-left: 0;" class="col-12 ml-0">
+                                	<div  class="input-group">
+                                	<a class="{{ $estado_filtro == 0 ? 'estado-activo' : 'estado' }}" href="javascript:void(0)" wire:click="Filtro(0)">Activos</a> | <a class="{{ $estado_filtro == 1 ? 'estado-activo' : 'estado' }}" href="javascript:void(0)" wire:click="Filtro(1)">Papelera</a>    
+                                	</div>	
+                                	</div>	    
+                                	</div>    		    
+                                
+                                	</div>
+                                			    
+                                	<!----------------------------------->
+                                	
+                                            
+                                			    
+                                
+                                					
+                                	</div>
+								<!-- /Filter -->
+								<div class="table-responsive">
+									<table class="table">
+										<thead>
+											<tr>
+												<th>
+												<label class="checkboxs">
+												    <input name="Todos" type="checkbox" value="1" onclick="CheckTodosLote()" class="check_todos"/>    
+                            						<span class="checkmarks"></span>
+												</label>
+												</th>
+												<th @if(!$columns['nro_compra']) style="display: none;" @endif>Nro compra</th>
+												<th @if(!$columns['nombre_proveedor']) style="display: none;" @endif>Nombre del proveedor</th>
+												<th @if(!$columns['created_at']) style="display: none;" @endif>Fecha</th>
+												<th @if(!$columns['status']) style="display: none;" @endif>Estado</th>
+												<th @if(!$columns['subtotal']) style="display: none;" @endif>Subtotal</th>
+												<th @if(!$columns['actualizacion']) style="display: none;" @endif>Actualizacion</th>
+												<th @if(!$columns['descuento']) style="display: none;" @endif>Descuento</th>
+												<th @if(!$columns['iva']) style="display: none;" @endif>IVA</th>
+												<th @if(!$columns['total']) style="display: none;" @endif>Total</th>
+												<th @if(!$columns['etiquetas']) style="display: none;" @endif>Etiquetas</th>
+												<th @if(!$columns['pago']) style="display: none;" @endif>Pago</th>
+												<th @if(!$columns['deuda']) style="display: none;" @endif>Deuda</th>
+												<th @if(!$columns['estado_pago']) style="display: none;" @endif>Estado de pago</th>
+												<th>Acciones</th>
+											</tr>
+										</thead>
+										<tbody>
+										    @foreach($data as $compra)
+											<tr>
+												<td>
+												<label class="checkboxs">
+												    <input type="checkbox" wire:model.defer="id_check" tu-attr-id="{{($compra->id)}}"  class="mis-checkboxes" value="{{$compra->id}}">
+													<span class="checkmarks"></span>
+												</label>
+												</td>
+												<td class="text-bolds" @if(!$columns['nro_compra']) style="display: none;" @endif>{{$compra->nro_compra}}</td>
+												<td class="text-bolds" @if(!$columns['nombre_proveedor']) style="display: none;" @endif>{{$compra->nombre_proveedor}}</td>
+												<td @if(!$columns['created_at']) style="display: none;" @endif>{{\Carbon\Carbon::parse($compra->created_at)->format('d-m-Y')}}</td>
+												<td @if(!$columns['status']) style="display: none;" @endif>
+												   
+												    @if($compra->status == 1)
+                                                    <span class="badges bg-lightyellow">Pendiente</span>
+                                                    @endif
+                                                    @if($compra->status == 2)
+                                                    <span class="badges bg-lightyellow">En proceso</span>
+                                                    @endif
+                                                    @if($compra->status == 4)
+                                                    <span class="badges bg-lightred">Cancelado</span>
+                                                    @endif
+                                                    @if($compra->status == 3)
+                                                    <span class="badges bg-lightgreen">Entregado</span>
+                                                    @endif
+												</td>
+												<td @if(!$columns['subtotal']) style="display: none;" @endif>$ {{$compra->subtotal}}</td>
+												<td @if(!$columns['actualizacion']) style="display: none;" @endif>$ {{$compra->actualizacion}}</td>
+												<td @if(!$columns['descuento']) style="display: none;" @endif>$ {{$compra->descuento}}</td>
+												<td @if(!$columns['iva']) style="display: none;" @endif>$ {{$compra->iva}}</td>
+												<td @if(!$columns['total']) style="display: none;" @endif>$ {{$compra->total}}</td>
+												<td @if(!$columns['etiquetas']) style="display: none;" @endif>
+											    <select {{$compra->proveedor_id == 2 ? 'disabled' : '' }} class="select2" id="{{$compra->id}}" multiple="multiple" data-relacion-id="{{ $compra->id }}"> 
+                                                    <!-- Aquí puedes incluir opciones predefinidas o dejarlo vacío -->
+                                                @if($compra->nombre_etiqueta != null)
+                                                <option value="{{ $compra->nombre_etiqueta }}" selected>
+                                                    {{ $compra->nombre_etiqueta }}
+                                                </option>
+                                                @endif
+                                                </select>
+											  	</td>
+												<td @if(!$columns['pago']) style="display: none;" @endif>$ {{number_format($compra->total-$compra->deuda,2)}}</td>
+												<td @if(!$columns['deuda']) style="display: none;" @endif>$ {{$compra->deuda}}</td>
+												<td @if(!$columns['estado_pago']) style="display: none;" @endif>
+												  
+                                                    @if(1 < $compra->deuda)
+                                                    <span class="badges bg-lightred">Impago</span>
+                                                    @endif
+                                                    @if($compra->deuda < 1)
+                                                    <span class="badges bg-lightgreen">Pago</span>
+                                                    @endif
+												    
+												
+												</td>
+												<td>
+												<a class="me-3" href="javascript:void(0)" wire:click.prevent="RenderFactura({{$compra->id}})">
+													<img src="{{ asset('assets/pos/img/icons/edit.svg') }}" alt="img">
+												</a>
+												<a hidden class="me-3" href="javascript:void(0)" wire:click.prevent="Edit({{$compra->id}})" >
+													<img src="{{ asset('assets/pos/img/icons/edit.svg') }}"  alt="img">
+												</a>
+												<a href="javascript:void(0)" onclick="ConfirmEliminar({{$compra->id}})" >
+													<img src="{{ asset('assets/pos/img/icons/delete.svg') }}" alt="img">
+												</a>
+												</td>
+											</tr>
+											@endforeach
+										</tbody>
+									</table>
+									
+								</div>
+								<br>
+								{{$data->links()}}
+							</div>
+						</div>
+						<!-- /product list -->
+			    	@endif
+						
+						
+                    @if($accion == 1)
+						@include('livewire.compras-resumen.agregar-editar-compra')
+					@endif
+	                
+	                @if($accion == 2)
+					@include('livewire.compras-resumen.actualizar-compra')
+					@endif
+					
+					@if($accion == 3)
+					@include('livewire.compras-resumen.elegir-recalcular-deuda')
+					@endif
+						
+	
+	
+					
+</div>
+
+
+<script type="text/javascript">
+
+    function ConfirmEliminar(id) {
+
+    swal({
+      title: 'CONFIRMAR',
+      text: 'QUIERE ELIMINAR LA COMPRA?',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      cancelButtonColor: '#fff',
+      confirmButtonColor: '#3B3F5C',
+      confirmButtonText: 'Aceptar'
+    }).then(function(result) {
+      if (result.value) {
+        window.livewire.emit('EliminarCompra', id)
+        swal.close()
+      }
+
+    })
+  }
+  
+
+</script>
+<script type="text/javascript">
+
+
+ function ConfirmDelete(id) {
+                                
+swal({
+title: 'CONFIRMAR',
+text: 'QUIERE ELIMINAR EL PRODUCTO DE LA COMPRA?',
+type: 'warning',
+showCancelButton: true,
+cancelButtonText: 'Cancelar',
+cancelButtonColor: '#fff',
+confirmButtonColor: '#3B3F5C',
+confirmButtonText: 'Aceptar'
+}).then(function(result) {
+if (result.value) {
+    window.livewire.emit('EliminarProducto', id)
+    swal.close()
+}
+                        
+})
+}
+
+
+ function ConfirmDeleteLast(id) {
+                                
+swal({
+title: 'CONFIRMAR',
+text: 'AL ELIMINAR ESTE PRODUCTO LA COMPRA QUEDARA VACIA Y SE ELIMINARA POR COMPLETO. ESTA ACCION ES IRREVERSIBLE. DESEA CONTINUAR?',
+type: 'warning',
+showCancelButton: true,
+cancelButtonText: 'Cancelar',
+cancelButtonColor: '#fff',
+confirmButtonColor: '#3B3F5C',
+confirmButtonText: 'Aceptar'
+}).then(function(result) {
+if (result.value) {
+    window.livewire.emit('EliminarProductoLast', id)
+    swal.close()
+}
+                        
+})
+}
+
+
+function ConfirmPago(id) {
+
+  swal({
+    title: 'CONFIRMAR',
+    text: '多CONFIRMAS ELIMINAR EL PAGO?',
+    type: 'warning',
+    showCancelButton: true,
+    cancelButtonText: 'Cerrar',
+    cancelButtonColor: '#fff',
+    confirmButtonColor: '#3B3F5C',
+    confirmButtonText: 'Aceptar'
+  }).then(function(result) {
+    if (result.value) {
+      window.livewire.emit('deletePago', id)
+      swal.close()
+    }
+
+  })
+}
+
+function MensajeAgregarPago(id) {
+
+  swal({
+    title: 'LA COMPRA NO PRESENTA DEUDA',
+    text: '¿DESEA AGREGAR UN PAGO DE TODOS MODOS?',
+    type: 'warning',
+    showCancelButton: true,
+    cancelButtonText: 'Cerrar',
+    cancelButtonColor: '#fff',
+    confirmButtonColor: '#3B3F5C',
+    confirmButtonText: 'Aceptar'
+  }).then(function(result) {
+    if (result.value) {
+      window.livewire.emit('AgregarPago', id)
+      swal.close()
+    }
+
+  })
+}
+
+</script>
+<script>
+    document.addEventListener('livewire:load', function () {
+        Livewire.hook('message.processed', function () {
+           $('.select2').select2({
+                data: @json($etiqueta_json),
+                tags: true, // Habilitar la creación de etiquetas si es necesario
+                maximumSelectionLength: 1 // Establece el límite de selección a 2 elementos
+            });
+            
+                        
+            $('.select2').on('change', function(e) {
+                var selectedId = $(this).attr('id');
+                var selectedValue = $(this).select2('val');
+                @this.emit('etiquetaSeleccionada', { value: selectedValue, id: selectedId } );
+            });
+            
+        });
+    });
+    
+document.addEventListener('DOMContentLoaded', function(){
+
+
+            $('.select2').select2({
+            tags: true,
+            data: @json($etiqueta_json),
+            language: 'es',
+            maximumSelectionLength: 1 // Establece el límite de selección a 2 elementos
+            });
+            
+            
+            
+            $('.select2').on('change', function(e) {
+                var selectedId = $(this).attr('id');
+                var selectedValue = $(this).select2('val');
+                @this.emit('etiquetaSeleccionada', { value: selectedValue, id: selectedId } );
+            });
+
+            
+            livewire.on('scan-code', action => {
+                $('#code').val('')
+            })
+            
+            
+						window.livewire.on('sale-ok', Msg => {
+								$('#theModal2').modal('hide')
+								noty(Msg)
+								
+								
+						})
+						
+								window.livewire.on('variacion-elegir', Msg => {
+                        			$('#Variaciones').modal('show')
+                        		})
+                        
+                        		window.livewire.on('variacion-elegir-hide', Msg => {
+                        			$('#Variaciones').modal('hide')
+                        		})
+                        		
+
+								window.livewire.on('agregar-cliente', Msg => {
+										$('#theModal-cliente').modal('show')
+								})
+
+								window.livewire.on('agregar-pago', Msg =>{
+										$('#AgregarPago').modal('show')
+								})
+
+
+
+								window.livewire.on('agregar-pago-hide', Msg =>{
+										$('#AgregarPago').modal('hide')
+								})
+
+								window.livewire.on('pago-dividido', Msg =>{
+										$('#PagoDividido').modal('show')
+								})
+
+								window.livewire.on('pago-dividido-hide', Msg =>{
+										$('#PagoDividido').modal('hide')
+								})
+
+
+								window.livewire.on('hide-modal2', Msg =>{
+										$('#modalDetails2').modal('hide')
+								})
+
+								window.livewire.on('cerrar-factura', Msg =>{
+										$('#theModal1').modal('hide')
+								})
+
+								window.livewire.on('modal-show', msg => {
+									$('#theModal1').modal('show')
+								})
+
+
+								window.livewire.on('abrir-hr-nueva', msg => {
+									$('#theModal').modal('show')
+								})
+
+								window.livewire.on('hide-modal3', Msg =>{
+										$('#modalDetails3').modal('hide')
+								})
+
+
+								window.livewire.on('modal-hr-hide', Msg =>{
+										$('#theModal').modal('hide')
+								})
+
+								window.livewire.on('hr-added', Msg => {
+									noty(Msg)
+								})
+								
+								window.livewire.on('msg', Msg => {
+									noty(Msg)
+								})
+
+								window.livewire.on('modal-estado', Msg =>{
+										$('#modalDetails-estado-pedido').modal('show')
+								})
+
+								window.livewire.on('modal-estado-hide', Msg =>{
+										$('#modalDetails-estado-pedido').modal('hide')
+								})
+
+								window.livewire.on('hr-asignada', Msg => {
+									noty(Msg)
+								})
+
+								window.livewire.on('pago-agregado', Msg => {
+									noty(Msg)
+								})
+
+								window.livewire.on('pago-actualizado', Msg => {
+									noty(Msg)
+								})
+
+								window.livewire.on('pago-eliminado', Msg => {
+									noty(Msg)
+								})
+								window.livewire.on('msg', Msg => {
+									noty(Msg)
+								})
+								//events
+								window.livewire.on('product-added', Msg => {
+									$('#theModal').modal('hide')
+									noty(Msg)
+								})
+
+								window.livewire.on('no-stock', Msg => {
+									noty(Msg, 2)
+								})
+
+								//eventos
+								window.livewire.on('show-modal', Msg =>{
+										$('#modalDetails').modal('show')
+								})
+
+								var total = $('#suma_totales').val();
+								$('#ver_totales').html('Ventas: '+total);
+
+
+    });
+
+</script>

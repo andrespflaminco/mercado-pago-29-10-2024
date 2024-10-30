@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<loginTicketResponse version="1.0">
+    <header>
+        <source>CN=wsaa, O=AFIP, C=AR, SERIALNUMBER=CUIT 33693450239</source>
+        <destination>SERIALNUMBER=CUIT 20358072101, CN=flaminco2022</destination>
+        <uniqueId>739502385</uniqueId>
+        <generationTime>2022-07-05T18:19:02.069-03:00</generationTime>
+        <expirationTime>2022-07-06T06:19:02.069-03:00</expirationTime>
+    </header>
+    <credentials>
+        <token>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pgo8c3NvIHZlcnNpb249IjIuMCI+CiAgICA8aWQgc3JjPSJDTj13c2FhLCBPPUFGSVAsIEM9QVIsIFNFUklBTE5VTUJFUj1DVUlUIDMzNjkzNDUwMjM5IiBkc3Q9IkNOPXdzZmUsIE89QUZJUCwgQz1BUiIgdW5pcXVlX2lkPSIzNzUwNzczNjkyIiBnZW5fdGltZT0iMTY1NzA1NTg4MiIgZXhwX3RpbWU9IjE2NTcwOTkxNDIiLz4KICAgIDxvcGVyYXRpb24gdHlwZT0ibG9naW4iIHZhbHVlPSJncmFudGVkIj4KICAgICAgICA8bG9naW4gZW50aXR5PSIzMzY5MzQ1MDIzOSIgc2VydmljZT0id3NmZSIgdWlkPSJTRVJJQUxOVU1CRVI9Q1VJVCAyMDM1ODA3MjEwMSwgQ049ZmxhbWluY28yMDIyIiBhdXRobWV0aG9kPSJjbXMiIHJlZ21ldGhvZD0iMjIiPgogICAgICAgICAgICA8cmVsYXRpb25zPgogICAgICAgICAgICAgICAgPHJlbGF0aW9uIGtleT0iMjAzNTgwNzIxMDEiIHJlbHR5cGU9IjQiLz4KICAgICAgICAgICAgICAgIDxyZWxhdGlvbiBrZXk9IjIzMTcwMjA4NzE0IiByZWx0eXBlPSI0Ii8+CiAgICAgICAgICAgIDwvcmVsYXRpb25zPgogICAgICAgIDwvbG9naW4+CiAgICA8L29wZXJhdGlvbj4KPC9zc28+Cg==</token>
+        <sign>tgH5ssoyfMv525DBhmB/BvyxiWbSlWmfjBsm7NF6WQRq8dwaiXE0vKra7pZujx2MDhI2e26NvAXs7cis/sIp7qFj79jFNSqSEHHmIxG4AGU8ybSN4Mok3bZFWQ7qQbOJLdhWa0QDH3hv2n0jeYSBG0Y1vCY6k8lVWN3mFlrSA/U=</sign>
+    </credentials>
+</loginTicketResponse>
