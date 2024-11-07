@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ModulosSuscripcion;
 use App\Models\planes_suscripcion;
 use App\Models\Suscripcion;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -28,7 +29,7 @@ class SuscripcionesService
 
         $sydate = date('Y-m-d');
         Log::info($sydate);
-        $suscripciones = Suscripcion::whereRaw('DATE(proximo_cobro) = "' . $sydate.'"')->get();
+        $suscripciones = Suscripcion::whereRaw('DATE(proximo_cobro) = "' . $sydate . '"')->get();
 
         return $suscripciones;
     }
@@ -124,9 +125,9 @@ class SuscripcionesService
             }
 
             $modulos_amount = 0;
-            $modulos_id='';
+            $modulos_id = '';
             if (isset($data['modulos_id']) && $data['modulos_id']) {
-                $modulos_id=$data['modulos_id'];
+                $modulos_id = $data['modulos_id'];
                 $modulos_seleccionados = explode(',', $data['modulos_id']);
 
                 foreach ($modulos_seleccionados as $modulo_id) {
@@ -181,7 +182,7 @@ class SuscripcionesService
                 'plan_id_flaminco'  => $data['plan_suscripcion'],
                 'modulos_id' =>  $modulos_id,
                 'modulos_amount' =>  $modulos_amount,
-                
+
                 'suscripcion_status'  => 'activa',
                 'cobro_status'  => 'pagada',
             ];
@@ -199,7 +200,7 @@ class SuscripcionesService
 
     public function actualizarSuscripcionFlaminco($data)
     {
-        
+
         //dd($data['proximo_cobro']);
         Log::info('SuscripcionesService - actualizarSuscripcionFlaminco');
         $sysdate = date("Y-m-d H:i:s");
@@ -264,5 +265,125 @@ class SuscripcionesService
             Log::info('SuscripcionesService - createOrUpdateSuscripcion - exception ' . $e->getMessage());
             return false;
         }
+    }
+
+    function getPreapprovalBySuscriptionId($id)
+    {
+        $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($id);
+        Log::alert($preapproval_suscripcion);
+        return $preapproval_suscripcion;
+    }
+
+    function updateAllSubscription()
+    {
+        $suscripcions = Suscripcion::where('suscripcion_status', 'activa')
+            ->where('id', '>', 720)
+            ->limit(10)
+            ->get();
+
+        foreach ($suscripcions as $key => $suscripcion) {
+
+            $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($suscripcion->suscripcion_id);
+
+            $data_preapproval = $this->setDataPreapprovalSuscription($preapproval_suscripcion);
+
+            $update_preapproval  = $this->updateSuscripcion($data_preapproval, $suscripcion);
+        }
+
+        return $preapproval_suscripcion;
+    }
+
+    function setDataPreapprovalSuscription($preapproval_suscripcion)
+    {
+        $response = array();
+
+        $auto_recurring = $preapproval_suscripcion['response']['auto_recurring'] ?? null;
+        $sumarized = $preapproval_suscripcion['response']['summarized'] ?? null;
+
+        if (!is_null($auto_recurring))
+            unset($preapproval_suscripcion['response']['summarized']);
+        if (!is_null($preapproval_suscripcion))
+            unset($preapproval_suscripcion['response']['auto_recurring']);
+
+        $general = $preapproval_suscripcion['response'] ?? null;
+
+        if (!is_null($general)) {
+
+            $response = array_merge($general, $auto_recurring, $sumarized);
+            Log::alert($response);
+        }
+
+
+        return $response;
+    }
+
+    function updateSuscripcion($data, $suscripcion)
+    {
+
+
+        $data = $this->convertFechas($data);
+
+        $data_update = [
+
+            'collector_id_mp' => $data['collector_id'] ?? null,
+            'application_id_mp' => $data['application_id'] ?? null,
+            'reason_mp' => $data['reason'] ?? null,
+            'date_created_mp' => $data['date_created'] ?? null,
+            'last_modified_mp' => $data['last_modified'] ?? null,
+            'frequency_mp' => $data['frequency'] ?? null,
+            'frequency_type_mp' => $data['frequency_type'] ?? null,
+            'transaction_amount_mp' => $data['transaction_amount'] ?? null,
+            'currency_id_mp' => $data['currency_id'] ?? null,
+            'start_date_mp' => $data['start_date'] ?? null,
+            'end_date_mp' => $data['end_date'] ?? null,
+            'free_trial_mp' => $data['free_trial'] ?? null,
+            'quotas_mp' => $data['quotas'] ?? null,
+            'charged_quantity_mp' => $data['charged_quantity'] ?? null,
+            'pending_charge_quantity_mp' => $data['pending_charge_quantity'] ?? null,
+            'charged_amount_mp' => $data['charged_amount'] ?? null,
+            'pending_charge_amount_mp' => $data['pending_charge_amount'] ?? null,
+            'semaphore_mp' => $data['semaphore'] ?? null,
+            'last_charged_date_mp' => $data['last_charged_date'] ?? null,
+            'last_charged_amount_mp' => $data['last_charged_amount'] ?? null,
+            'next_payment_date_mp' => $data['next_payment_date'] ?? null,
+            'payment_method_id_mp' => $data['payment_method_id'] ?? null,
+            'payment_method_id_secondary_mp' => $data['payment_method_id_secondary'] ?? null,
+            'first_invoice_offset_mp' => $data['first_invoice_offset'] ?? null,
+
+        ];
+
+        try {
+            $suscripcion = $suscripcion->update($data_update);
+            return $suscripcion;
+        } catch (\Throwable $th) {
+            Log::alert($th);
+        }
+    }
+
+    public function convertFechas($data)
+    {
+
+
+        if (isset($data['date_created']))
+            $data['date_created'] = Carbon::parse($data['date_created'])->format('Y-m-d H:i:s');
+
+
+        if (isset($data['last_modified']))
+            $data['last_modified'] = Carbon::parse($data['last_modified'])->format('Y-m-d H:i:s');
+
+        if (isset($data['start_date']))
+            $data['start_date'] = Carbon::parse($data['start_date'])->format('Y-m-d H:i:s');
+
+        if (isset($data['end_date']))
+            $data['end_date'] = Carbon::parse($data['end_date'])->format('Y-m-d H:i:s');
+
+        if (isset($data['last_charged_date']))
+            $data['last_charged_date'] = Carbon::parse($data['last_charged_date'])->format('Y-m-d H:i:s');
+
+        if (isset($data['next_payment_date']))
+            $data['next_payment_date'] = Carbon::parse($data['next_payment_date'])->format('Y-m-d H:i:s');
+
+
+        return $data;
     }
 }

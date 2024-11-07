@@ -13,9 +13,9 @@ use App\Traits\ZohoCRMTrait;
 
 class MPService
 {
-    
+
     use ZohoCRMTrait;
-    
+
     protected  $suscripcionControlService;
     protected  $suscripcionCobroService;
     protected  $usersService;
@@ -29,7 +29,7 @@ class MPService
 
     public function getPresapprovalPlanMP($params)
     {
-        
+
         Log::info('MPService - getPresapprovalPlanMP');
 
         try {
@@ -37,7 +37,7 @@ class MPService
             $user = $params['user'];
             //$free_days = $params['free_days'];
             $free_days = 14;
-            
+
             $urlBase = config('app.APP_URL');
 
             $sysdate = date("Y-m-d H:i:s");
@@ -122,7 +122,7 @@ class MPService
     {
         Log::info('MPService - formatgeneratePreapprovalData');
         $free_days = $params['free_days'];
-        
+
         $preferenceData = [
             "reason" => $params['descripcion'],
             'auto_recurring' => array(
@@ -144,11 +144,11 @@ class MPService
 
             "back_url" => $params['url_success'],
         ];
-        
-        
+
+
         // Verificar si $free_days es mayor a 0
         if ($free_days > 0) {
-            // Agregar la configuraci¨®n de 'free_trial' al array 'auto_recurring'
+            // Agregar la configuraciï¿½ï¿½n de 'free_trial' al array 'auto_recurring'
             $preferenceData['auto_recurring']['free_trial'] = [
                 'frequency' => $free_days,
                 'frequency_type' => "days",
@@ -322,25 +322,25 @@ class MPService
 
             if (!$preference || !isset($preference['status']) || !in_array($preference['status'], [200, 2001])) {
                 Log::info('$preference - error ');
-                
+
                 $user = User::find(auth()->user()->id);
                 $user->intento_pago = "RECHAZADO";
                 $user->save();
-                
-                $this->updateLeadFromUser($user->id); 
-                
+
+                $this->updateLeadFromUser($user->id);
+
                 return false;
             }
 
             $user = User::find(auth()->user()->id);
             $user->intento_pago = "COMPLETADO";
-            if($user->flujo == 1){
+            if ($user->flujo == 1) {
                 $user->autogestion = "COMPLETADO";
-            } 
+            }
             $user->save();
-                
-            $this->updateLeadFromUser($user->id); 
-            
+
+            $this->updateLeadFromUser($user->id);
+
             Log::info($preference);
 
             $plan_id = $preference['response']['preapproval_plan_id'];
@@ -627,7 +627,7 @@ class MPService
         $preference = null;
 
         try {
-            
+
             $MP_APP_ID = config('app.MP_APP_ID');
             $MP_APP_SECRET = config('app.MP_APP_SECRET');
             $MP_INTEGRATOR_ID = config('app.MP_INTEGRATOR_ID');
@@ -704,9 +704,9 @@ class MPService
             return false;
         }
     }
-    
-        
-        public function CrearCheckoutPreference($checkoutData)
+
+
+    public function CrearCheckoutPreference($checkoutData)
     {
         Log::info('MPService - CrearCheckout');
 
@@ -733,5 +733,29 @@ class MPService
         Log::info($preference);
 
         return $preference;
+    }
+
+
+    public function getPreapprovalBySuscriptionId($id)
+    {
+        /* get_preapproval_payment */
+        Log::info('MPService - getPreapprovalBySuscriptionId');
+
+        try {
+            $MP_APP_ID = config('app.MP_APP_ID');
+            $MP_APP_SECRET = config('app.MP_APP_SECRET');
+            $MP_INTEGRATOR_ID = config('app.MP_INTEGRATOR_ID');
+
+            $mercadoPago = new MP(null, $MP_APP_ID, $MP_APP_SECRET, $MP_INTEGRATOR_ID);
+            $data_preapproval = $mercadoPago->get_preapproval_payment($id);
+            return $data_preapproval;
+        } catch (\Exception $e) {
+            Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - Exception');
+            Log::info($e->getMessage());
+            session(['error_mp' => $e->getMessage()]);
+            if ($e->getMessage() == 'invalid_token') {
+                Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - invalid_token');
+            }
+        }
     }
 }

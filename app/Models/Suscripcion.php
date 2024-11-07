@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Suscripcion extends Model
 {
     protected $table = 'suscripcions';
-    
+
     protected $fillable = [
         'user_id',
         'suscripcion_id',
@@ -28,7 +28,41 @@ class Suscripcion extends Model
         'cobro_status',
         'plan_id_flaminco',
         'external_reference',
-        'proximo_cobro'
+        'proximo_cobro',
+
+
+
+        'collector_id_mp',
+        'application_id_mp',
+        'reason_mp',
+        'date_created_mp',
+        'last_modified_mp',
+        'frequency_mp',
+        'frequency_type_mp',
+        'transaction_amount_mp',
+        'currency_id_mp',
+        'start_date_mp',
+        'end_date_mp',
+        'free_trial_mp',
+
+
+
+        'quotas_mp',
+        'charged_quantity_mp',
+        'pending_charge_quantity_mp',
+        'charged_amount_mp',
+        'pending_charge_amount_mp',
+
+
+        'semaphore_mp',
+        'last_charged_date_mp',
+        'last_charged_amount_mp',
+
+
+        'next_payment_date_mp',
+        'payment_method_id_mp',
+        'payment_method_id_secondary_mp',
+        'first_invoice_offset_mp',
     ];
 
     public function user()
