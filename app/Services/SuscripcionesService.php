@@ -109,7 +109,7 @@ class SuscripcionesService
             $plan_id = $suscripcion->plan_id;
 
             $planSuscripcion = planes_suscripcion::find($data['plan_suscripcion']);
-            $user = Auth::user();
+            $user = Auth::user();            
 
             $monto_plan = $planSuscripcion->monto;
             $monto = $planSuscripcion->monto;
@@ -142,21 +142,20 @@ class SuscripcionesService
             $urlBase = config('app.APP_URL');
             $urlSuccess = $urlBase . '/mp-success';
 
+
             $preferenceData = [
                 "reason" => $descripcion,
                 'auto_recurring' => array(
                     'frequency' => 1,
-                    'frequency_type' => 'months',
-                    //'frequency_type' => 'days',
+                    'frequency_type' => $planSuscripcion->frequency_type,
                     //'repetitions' => 12,
-                    //'billing_day' => 8,
-                    //'billing_day_proportional' => true,
-                    /*
-                'free_trial' => array(
-                    'frequency' => 1,
-                    'frequency_type' => "months",
-                ),
-                */
+                    'billing_day' => $planSuscripcion->billing_day,
+                    'billing_day_proportional' => $planSuscripcion->billing_day_proportional,
+
+                    'free_trial' => array(
+                        'frequency' => $planSuscripcion->trial_frequency,
+                        'frequency_type' => $planSuscripcion->trial_frequency_type,
+                    ),
                     'transaction_amount' => floatval($monto),
                     'currency_id' => 'ARS',
                 ),
@@ -190,8 +189,10 @@ class SuscripcionesService
             if (in_array($preferenciaMP['status'], [200, 201])) {
                 $this->actualizarSuscripcionFlaminco($dataSuscripcion);
             }
+            
             return  $preferenciaMP;
         } catch (Exception $e) {
+            
             Log::info('SuscripcionesService - actualizarSuscripcion - ' . $e->getMessage());
         }
 
@@ -270,7 +271,7 @@ class SuscripcionesService
     function getPreapprovalBySuscriptionId($id)
     {
         $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($id);
-        
+
         return $preapproval_suscripcion;
     }
 
@@ -312,7 +313,7 @@ class SuscripcionesService
         $general = $preapproval_suscripcion['response'] ?? null;
 
         if (!is_null($general)) {
-            $response = array_merge($general, $auto_recurring, $sumarized);            
+            $response = array_merge($general, $auto_recurring, $sumarized);
         }
 
 
@@ -405,7 +406,7 @@ class SuscripcionesService
         $data_suscripcion = $suscripcion->toArray();
 
         $data_merge = array_merge($data_suscripcion, $data_update);
-        
+
         try {
             $suscripcion_control = $this->suscripcionControlService->insert($data_merge);
 

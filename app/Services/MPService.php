@@ -34,6 +34,9 @@ class MPService
 
         try {
             $planSuscripcion = planes_suscripcion::find($params['plan_suscripcion']);
+
+            Log::alert(json_encode($planSuscripcion));
+
             $user = $params['user'];
             //$free_days = $params['free_days'];
             $free_days = 14;
@@ -78,13 +81,25 @@ class MPService
                 'url_success' => $urlBase . '/mp-success',
                 'users_amount' => $users_amount,
                 'modulos_amount' => $modulos_amount,
-                'free_days' => $free_days
+                'free_days' => $free_days,
+                /* nuevos campos */
+                'frequency' => $planSuscripcion->frequency,
+                'frequency_type' => $planSuscripcion->frequency_type,
+                'trial_frequency' => $planSuscripcion->trial_frequency,
+                'trial_frequency_type' => $planSuscripcion->trial_frequency_type,
+                'billing_day' => $planSuscripcion->billing_day,
+                'billing_day_proportional' => $planSuscripcion->billing_day_proportional,
             ];
 
             $dataFormat = $this->formatgeneratePreapprovalPlanData($data);
             $data['data_format'] = $dataFormat;
 
             $dataPreference = $this->generatePreapprovalPlan($dataFormat);
+            Log::alert('MP resultado');
+            //Log::alert($dataPreference['response']['auto_recurring']);
+            //Log::alert($dataPreference['response']['auto_recurring']['free_trial']);
+
+
 
             if (isset($dataPreference['status'])) {
                 if ($dataPreference['status'] == 201) {
@@ -103,6 +118,22 @@ class MPService
                     $data['plan_suscripcion_id'] = $planSuscripcion->id;
                     $data['plan_suscripcion_monto'] = $planSuscripcion->monto;
                     $data['proximo_cobro'] = $sydateAddMonth;
+
+                    /* nuevos campos planes_suscripcion */
+                    if (isset($dataPreference['response']['auto_recurring']['free_trial'])) {
+
+                        $data['frequency'] = $dataPreference['response']['auto_recurring']['frequency'];
+                        $data['frequency_type'] = $dataPreference['response']['auto_recurring']['frequency_type'];
+
+                        $data['billing_day'] = $dataPreference['response']['auto_recurring']['billing_day'] ?? null;
+                        $data['billing_day_proportional'] = $dataPreference['response']['auto_recurring']['billing_day_proportional'] ?? false;
+
+                        $data['trial_frequency'] = $dataPreference['response']['auto_recurring']['free_trial']['frequency'];
+                        $data['trial_frequency_type'] = $dataPreference['response']['auto_recurring']['free_trial']['frequency_type'];
+
+                    }
+                    Log::alert('DATA');
+                    //Log::alert($data);
 
                     return $data;
                 } else {
@@ -126,18 +157,17 @@ class MPService
         $preferenceData = [
             "reason" => $params['descripcion'],
             'auto_recurring' => array(
-                'frequency' => 1,
-                'frequency_type' => 'months',
-                //'frequency_type' => 'days',
+                'frequency' => $params['frequency'],
+                'frequency_type' => $params['frequency_type'],
                 //'repetitions' => 12,
-                //'billing_day' => 8,
-                //'billing_day_proportional' => true,
-                /*
+                'billing_day' => $params['billing_day'],
+                'billing_day_proportional' => $params['billing_day_proportional'],
+
                 'free_trial' => array(
-                    'frequency' => 1,
-                    'frequency_type' => "months",
+                    'frequency' => $params['trial_frequency'],
+                    'frequency_type' => $params['trial_frequency_type'],
                 ),
-                */
+
                 'transaction_amount' => floatval($params['monto']),
                 'currency_id' => 'ARS',
             ),

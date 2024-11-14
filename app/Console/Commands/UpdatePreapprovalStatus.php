@@ -19,6 +19,7 @@ use App\Models\descargas;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Services\MPService;
 use App\Services\SuscripcionesService;
 use Illuminate\Support\Facades\Log;
 
@@ -38,15 +39,17 @@ class UpdatePreapprovalStatus extends Command
      */
     protected $description = 'Recorre la tabla suscripcions y consulta a la API de MP para luego actualizar los estados';
     protected $suscripcionesService;
+    protected $mPService;
     /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct(SuscripcionesService $suscripcionesService)
+    public function __construct(SuscripcionesService $suscripcionesService, MPService $mPService)
     {
         parent::__construct();
         $this->suscripcionesService = $suscripcionesService;
+        $this->mPService = $mPService;
     }
 
     /**
@@ -57,6 +60,26 @@ class UpdatePreapprovalStatus extends Command
     public function handle()
     {
         set_time_limit(0);
+
+        /* plan_suscripcion 
+quantity */
+
+
+        /* getPresapprovalPlanMP */
+
+
+        /* $data['suscripcion_id'];
+        $data['plan_suscripcion']
+         */
+
+        $params['suscripcion_id'] = '4a9c9913fd8943f08e20c1cd0645f082';
+        $params['plan_suscripcion'] = 1;
+        $params['quantity'] = 0;
+        $params['user'] = User::find(1);
+
+        //$this->mPService->getPresapprovalPlanMP($params);
+        $this->suscripcionesService->actualizarSuscripcion($params);
+        exit;
 
         $this->suscripcionesService->updateAllSubscription();
         Log::alert('Fin del proceso');
