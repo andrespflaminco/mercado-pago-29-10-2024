@@ -60,26 +60,18 @@ class UpdatePreapprovalStatus extends Command
     public function handle()
     {
         set_time_limit(0);
-
-        /* plan_suscripcion 
-quantity */
-
-
-        /* getPresapprovalPlanMP */
-
-
-        /* $data['suscripcion_id'];
-        $data['plan_suscripcion']
-         */
-
+        
+        /* 
+        USADO PARA TESTEAR CAMBIOS ETAPA 2
+        
         $params['suscripcion_id'] = '4a9c9913fd8943f08e20c1cd0645f082';
         $params['plan_suscripcion'] = 1;
         $params['quantity'] = 0;
         $params['user'] = User::find(1);
 
-        //$this->mPService->getPresapprovalPlanMP($params);
-        $this->suscripcionesService->actualizarSuscripcion($params);
-        exit;
+        $this->mPService->getPresapprovalPlanMP($params);
+        
+        exit; */
 
         $this->suscripcionesService->updateAllSubscription();
         Log::alert('Fin del proceso');
