@@ -270,12 +270,13 @@ class SuscripcionesService
     function getPreapprovalBySuscriptionId($id)
     {
         $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($id);
-        Log::alert($preapproval_suscripcion);
+        
         return $preapproval_suscripcion;
     }
 
     function updateAllSubscription()
     {
+
         $suscripcions = Suscripcion::where('suscripcion_status', 'activa')
             ->where('id', '>', 720)
             ->limit(10)
@@ -285,9 +286,12 @@ class SuscripcionesService
 
             $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($suscripcion->suscripcion_id);
 
-            $data_preapproval = $this->setDataPreapprovalSuscription($preapproval_suscripcion);
 
-            $update_preapproval  = $this->updateSuscripcion($data_preapproval, $suscripcion);
+            if ($preapproval_suscripcion) {
+                $data_preapproval = $this->setDataPreapprovalSuscription($preapproval_suscripcion);
+                $update_preapproval  = $this->updateSuscripcion($data_preapproval, $suscripcion);
+                $insert_suscripcion_control = $this->insertSuscripcionControl($data_preapproval, $suscripcion);
+            }
         }
 
         return $preapproval_suscripcion;
@@ -308,9 +312,7 @@ class SuscripcionesService
         $general = $preapproval_suscripcion['response'] ?? null;
 
         if (!is_null($general)) {
-
-            $response = array_merge($general, $auto_recurring, $sumarized);
-            Log::alert($response);
+            $response = array_merge($general, $auto_recurring, $sumarized);            
         }
 
 
@@ -355,6 +357,59 @@ class SuscripcionesService
         try {
             $suscripcion = $suscripcion->update($data_update);
             return $suscripcion;
+        } catch (\Throwable $th) {
+            Log::alert($th);
+            return false;
+        }
+    }
+
+    function insertSuscripcionControl($data, $suscripcion)
+    {
+
+
+        $data = $this->convertFechas($data);
+
+        $data_update = [
+
+            'collector_id_mp' => $data['collector_id'] ?? null,
+            'application_id_mp' => $data['application_id'] ?? null,
+            'reason_mp' => $data['reason'] ?? null,
+            'date_created_mp' => $data['date_created'] ?? null,
+            'last_modified_mp' => $data['last_modified'] ?? null,
+            'frequency_mp' => $data['frequency'] ?? null,
+            'frequency_type_mp' => $data['frequency_type'] ?? null,
+            'transaction_amount_mp' => $data['transaction_amount'] ?? null,
+            'currency_id_mp' => $data['currency_id'] ?? null,
+            'start_date_mp' => $data['start_date'] ?? null,
+            'end_date_mp' => $data['end_date'] ?? null,
+            'free_trial_mp' => $data['free_trial'] ?? null,
+            'quotas_mp' => $data['quotas'] ?? null,
+            'charged_quantity_mp' => $data['charged_quantity'] ?? null,
+            'pending_charge_quantity_mp' => $data['pending_charge_quantity'] ?? null,
+            'charged_amount_mp' => $data['charged_amount'] ?? null,
+            'pending_charge_amount_mp' => $data['pending_charge_amount'] ?? null,
+            'semaphore_mp' => $data['semaphore'] ?? null,
+            'last_charged_date_mp' => $data['last_charged_date'] ?? null,
+            'last_charged_amount_mp' => $data['last_charged_amount'] ?? null,
+            'next_payment_date_mp' => $data['next_payment_date'] ?? null,
+            'payment_method_id_mp' => $data['payment_method_id'] ?? null,
+            'payment_method_id_secondary_mp' => $data['payment_method_id_secondary'] ?? null,
+            'first_invoice_offset_mp' => $data['first_invoice_offset'] ?? null,
+
+            'plan_id' => $data['preapproval_plan_id'] ?? null,
+
+
+
+        ];
+
+        $data_suscripcion = $suscripcion->toArray();
+
+        $data_merge = array_merge($data_suscripcion, $data_update);
+        
+        try {
+            $suscripcion_control = $this->suscripcionControlService->insert($data_merge);
+
+            return $suscripcion_control;
         } catch (\Throwable $th) {
             Log::alert($th);
         }

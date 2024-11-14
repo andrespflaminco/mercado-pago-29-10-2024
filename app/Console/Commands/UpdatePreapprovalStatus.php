@@ -56,6 +56,8 @@ class UpdatePreapprovalStatus extends Command
      */
     public function handle()
     {
+        set_time_limit(0);
+
         $this->suscripcionesService->updateAllSubscription();
         Log::alert('Fin del proceso');
     }

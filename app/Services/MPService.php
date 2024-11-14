@@ -756,6 +756,7 @@ class MPService
             if ($e->getMessage() == 'invalid_token') {
                 Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - invalid_token');
             }
+            return false;
         }
     }
 }

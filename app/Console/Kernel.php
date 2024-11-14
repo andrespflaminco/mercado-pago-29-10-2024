@@ -32,6 +32,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
           $schedule->command('suscripcion:vencimiento')->dailyAt('8:00');
+          $schedule->command('command:UpdatePreapprovalStatus')->dailyAt('5:00');
           
     }
 
