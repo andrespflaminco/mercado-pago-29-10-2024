@@ -63,6 +63,11 @@ class Suscripcion extends Model
         'payment_method_id_mp',
         'payment_method_id_secondary_mp',
         'first_invoice_offset_mp',
+
+        'billing_day_proportional_mp',
+        'has_billing_day_mp',
+        'back_url_mp',
+        'status_mp',
     ];
 
     public function user()

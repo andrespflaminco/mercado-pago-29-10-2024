@@ -96,8 +96,7 @@ class MPService
 
             $dataPreference = $this->generatePreapprovalPlan($dataFormat);
             Log::alert('MP resultado');
-            //Log::alert($dataPreference['response']['auto_recurring']);
-            //Log::alert($dataPreference['response']['auto_recurring']['free_trial']);
+            
 
 
 
@@ -151,7 +150,7 @@ class MPService
 
     public function formatgeneratePreapprovalPlanData($params)
     {
-        Log::info('MPService - formatgeneratePreapprovalData');
+        Log::info('MPService - formatgeneratePreapprovalPlanData');
         $free_days = $params['free_days'];
 
         $preferenceData = [
@@ -159,15 +158,8 @@ class MPService
             'auto_recurring' => array(
                 'frequency' => $params['frequency'],
                 'frequency_type' => $params['frequency_type'],
-                //'repetitions' => 12,
-                'billing_day' => $params['billing_day'],
-                'billing_day_proportional' => $params['billing_day_proportional'],
-
-                'free_trial' => array(
-                    'frequency' => $params['trial_frequency'],
-                    'frequency_type' => $params['trial_frequency_type'],
-                ),
-
+                //'repetitions' => 12,                
+                'billing_day_proportional' => $params['billing_day_proportional'],      
                 'transaction_amount' => floatval($params['monto']),
                 'currency_id' => 'ARS',
             ),
@@ -175,15 +167,19 @@ class MPService
             "back_url" => $params['url_success'],
         ];
 
+        if ($params['billing_day']) {
+            $preferenceData['auto_recurring']['billing_day'] =$params['billing_day'];
+        }
 
         // Verificar si $free_days es mayor a 0
-        if ($free_days > 0) {
-            // Agregar la configuraci��n de 'free_trial' al array 'auto_recurring'
+        if ($params['trial_frequency'] > 0) {
+            // Agregar la configuracion de 'free_trial' al array 'auto_recurring'
             $preferenceData['auto_recurring']['free_trial'] = [
-                'frequency' => $free_days,
-                'frequency_type' => "days",
+                'frequency' => $params['trial_frequency'],
+                'frequency_type' => $params['trial_frequency_type'],
             ];
-        }
+         }
+        
 
         //Log::info(json_encode($preferenceData));
         Log::info($preferenceData);

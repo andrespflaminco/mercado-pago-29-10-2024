@@ -16,8 +16,8 @@ class AddFieldsToPlanesSuscripcionTable extends Migration
         Schema::table('planes_suscripcions', function (Blueprint $table) {
             $table->integer('frequency')->nullable()->default(1);
             $table->string('frequency_type')->nullable()->default('months');
-            $table->integer('trial_frequency')->nullable()->default(1);
-            $table->string('trial_frequency_type')->nullable()->default('months');
+            $table->integer('trial_frequency')->nullable()->default(14);
+            $table->string('trial_frequency_type')->nullable()->default('days');
             $table->integer('billing_day')->nullable();
             $table->boolean('billing_day_proportional')->nullable()->default(false);
         });

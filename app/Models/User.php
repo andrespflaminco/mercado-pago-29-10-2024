@@ -95,6 +95,9 @@ class User extends Authenticatable //implements MustVerifyEmail
     ];
 
 
-
+    public function suscripcion()
+    {
+        return $this->hasOne(Suscripcion::class, 'user_id');
+    }
 
 }

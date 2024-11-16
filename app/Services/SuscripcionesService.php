@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ModulosSuscripcion;
 use App\Models\planes_suscripcion;
 use App\Models\Suscripcion;
+use App\Models\SuscripcionControl;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -109,7 +110,7 @@ class SuscripcionesService
             $plan_id = $suscripcion->plan_id;
 
             $planSuscripcion = planes_suscripcion::find($data['plan_suscripcion']);
-            $user = Auth::user();            
+            $user = Auth::user();
 
             $monto_plan = $planSuscripcion->monto;
             $monto = $planSuscripcion->monto;
@@ -149,18 +150,24 @@ class SuscripcionesService
                     'frequency' => 1,
                     'frequency_type' => $planSuscripcion->frequency_type,
                     //'repetitions' => 12,
-                    'billing_day' => $planSuscripcion->billing_day,
                     'billing_day_proportional' => $planSuscripcion->billing_day_proportional,
-
-                    'free_trial' => array(
-                        'frequency' => $planSuscripcion->trial_frequency,
-                        'frequency_type' => $planSuscripcion->trial_frequency_type,
-                    ),
                     'transaction_amount' => floatval($monto),
                     'currency_id' => 'ARS',
                 ),
                 "back_url" =>  $urlSuccess,
             ];
+
+            if ($planSuscripcion->billing_day) {
+                $preferenceData['auto_recurring']['billing_day'] = $planSuscripcion->billing_day;
+            }
+
+            if ($planSuscripcion->trial_frequency > 0) {
+                // Agregar la configuracion de 'free_trial' al array 'auto_recurring'
+                $preferenceData['auto_recurring']['free_trial'] = [
+                    'frequency' => $planSuscripcion->trial_frequency,
+                    'frequency_type' => $planSuscripcion->trial_frequency_type,
+                ];
+            }
 
             //$preferenciaMP = $this->MPService->getPresapprovalPlanMP($data);            
             $preferenciaMP = $this->MPService->updatePreapprovalPlan($plan_id, $preferenceData);
@@ -189,10 +196,10 @@ class SuscripcionesService
             if (in_array($preferenciaMP['status'], [200, 201])) {
                 $this->actualizarSuscripcionFlaminco($dataSuscripcion);
             }
-            
+
             return  $preferenciaMP;
         } catch (Exception $e) {
-            
+
             Log::info('SuscripcionesService - actualizarSuscripcion - ' . $e->getMessage());
         }
 
@@ -275,18 +282,27 @@ class SuscripcionesService
         return $preapproval_suscripcion;
     }
 
-    function updateAllSubscription()
+    function updateAllSubscription($suscripcion_id = null)
     {
+        Log::info('SuscripcionesService - updateAllSubscription');
+        $date = Carbon::now()->subDays(60);
 
         $suscripcions = Suscripcion::where('suscripcion_status', 'activa')
-            ->where('id', '>', 720)
-            ->limit(10)
-            ->get();
+        ->where('created_at', '>=', $date);
+
+        if ($suscripcion_id) {
+            $suscripcions = $suscripcions->where('suscripcion_id',  $suscripcion_id );
+        }
+
+        $suscripcions =  $suscripcions->get();
+
+        $preapproval_suscripcion = null;
 
         foreach ($suscripcions as $key => $suscripcion) {
+            Log::info('SuscripcionesService - updateAllSubscription - '.$suscripcion->suscripcion_id);
 
             $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($suscripcion->suscripcion_id);
-
+            Log::info($preapproval_suscripcion);
 
             if ($preapproval_suscripcion) {
                 $data_preapproval = $this->setDataPreapprovalSuscription($preapproval_suscripcion);
@@ -322,8 +338,6 @@ class SuscripcionesService
 
     function updateSuscripcion($data, $suscripcion)
     {
-
-
         $data = $this->convertFechas($data);
 
         $data_update = [
@@ -352,11 +366,22 @@ class SuscripcionesService
             'payment_method_id_mp' => $data['payment_method_id'] ?? null,
             'payment_method_id_secondary_mp' => $data['payment_method_id_secondary'] ?? null,
             'first_invoice_offset_mp' => $data['first_invoice_offset'] ?? null,
+            'billing_day_proportional_mp' => $data['billing_day_proportional'] ?? null,
+            'has_billing_day_mp' => $data['has_billing_day'] ?? null,
+            'back_url_mp' => $data['back_url'] ?? null,
+            'status_mp' => $data['status'] ?? null,
 
         ];
 
+        if(isset($data['status']) && $data['status'] == 'authorized'){
+            $data_update['suscripcion_status'] = 'activ';
+            $data_update['cobro_status'] = 'pagad';
+        }
+
         try {
             $suscripcion = $suscripcion->update($data_update);
+            Log::info('SuscripcionesService - updateSuscripcion - $suscripcion ');
+
             return $suscripcion;
         } catch (\Throwable $th) {
             Log::alert($th);
@@ -366,9 +391,16 @@ class SuscripcionesService
 
     function insertSuscripcionControl($data, $suscripcion)
     {
-
-
         $data = $this->convertFechas($data);
+
+        $SuscripcionControl = SuscripcionControl::where('suscripcion_id',$data['id'])->orderBy('id','DESC')->first();
+
+        if($SuscripcionControl){
+
+            if($SuscripcionControl->last_charged_date_mp == $data['last_charged_date']){
+                return null;
+            }
+        }
 
         $data_update = [
 
@@ -399,7 +431,10 @@ class SuscripcionesService
 
             'plan_id' => $data['preapproval_plan_id'] ?? null,
 
-
+            'billing_day_proportional_mp' => $data['billing_day_proportional'] ?? null,
+            'has_billing_day_mp' => $data['has_billing_day'] ?? null,
+            'back_url_mp' => $data['back_url'] ?? null,
+            'status_mp' => $data['status'] ?? null,
 
         ];
 
@@ -409,6 +444,7 @@ class SuscripcionesService
 
         try {
             $suscripcion_control = $this->suscripcionControlService->insert($data_merge);
+            Log::info('SuscripcionesService - insertSuscripcionControl - $suscripcion_control ');
 
             return $suscripcion_control;
         } catch (\Throwable $th) {

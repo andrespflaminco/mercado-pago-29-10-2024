@@ -59,21 +59,10 @@ class UpdatePreapprovalStatus extends Command
      */
     public function handle()
     {
-        set_time_limit(0);
+        set_time_limit(0);   
         
-        /* 
-        USADO PARA TESTEAR CAMBIOS ETAPA 2
-        
-        $params['suscripcion_id'] = '4a9c9913fd8943f08e20c1cd0645f082';
-        $params['plan_suscripcion'] = 1;
-        $params['quantity'] = 0;
-        $params['user'] = User::find(1);
-
-        $this->mPService->getPresapprovalPlanMP($params);
-        
-        exit; */
-
-        $this->suscripcionesService->updateAllSubscription();
+        //$this->suscripcionesService->updateAllSubscription('9cc8da79c78f421299a31ede5208a788');
+        $this->suscripcionesService->updateAllSubscription(null);
         Log::alert('Fin del proceso');
     }
 }

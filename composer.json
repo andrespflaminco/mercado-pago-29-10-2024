@@ -29,7 +29,6 @@
         "mike42/escpos-php": "^4.0",
         "milon/barcode": "^8.0",
         "phpoffice/phpword": "dev-master",
-        "santigraviano/laravel-mercadopago": "^1.0",
         "simplesoftwareio/simple-qrcode": "~4",
         "spatie/laravel-permission": "^4.1",
         "woopi/laravel-mercadopago": "^1.0"

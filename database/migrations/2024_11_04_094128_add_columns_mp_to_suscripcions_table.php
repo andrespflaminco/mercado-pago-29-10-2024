@@ -46,6 +46,13 @@ class AddColumnsMpToSuscripcionsTable extends Migration
             $table->string('payment_method_id_mp')->nullable();
             $table->string('payment_method_id_secondary_mp')->nullable();
             $table->string('first_invoice_offset_mp')->nullable();
+
+            $table->string('status_mp')->nullable();
+            $table->string('back_url_mp')->nullable();
+            $table->boolean('billing_day_proportional_mp')->nullable();
+            $table->boolean('has_billing_day_mp')->nullable();
+
+            
         });
 
         Schema::table('suscripcion_controls', function (Blueprint $table) {
@@ -81,6 +88,13 @@ class AddColumnsMpToSuscripcionsTable extends Migration
             $table->string('payment_method_id_mp')->nullable();
             $table->string('payment_method_id_secondary_mp')->nullable();
             $table->string('first_invoice_offset_mp')->nullable();
+
+            $table->string('status_mp')->nullable();
+            $table->string('back_url_mp')->nullable();
+            $table->boolean('billing_day_proportional_mp')->nullable();
+            $table->boolean('has_billing_day_mp')->nullable();
+
+          
         });
     }
 
@@ -125,9 +139,14 @@ class AddColumnsMpToSuscripcionsTable extends Migration
             $table->dropColumn('payment_method_id_mp');
             $table->dropColumn('payment_method_id_secondary_mp');
             $table->dropColumn('first_invoice_offset_mp');
+
+            $table->dropColumn('status_mp');
+            $table->dropColumn('back_url_mp');
+            $table->dropColumn('billing_day_proportional_mp');
+            $table->dropColumn('has_billing_day_mp');
         });
 
-        Schema::table('suscripcions_control', function (Blueprint $table) {
+        Schema::table('suscripcion_controls', function (Blueprint $table) {
 
             $table->dropColumn('collector_id_mp');
             $table->dropColumn('application_id_mp');
@@ -160,6 +179,11 @@ class AddColumnsMpToSuscripcionsTable extends Migration
             $table->dropColumn('payment_method_id_mp');
             $table->dropColumn('payment_method_id_secondary_mp');
             $table->dropColumn('first_invoice_offset_mp');
+
+            $table->dropColumn('status_mp');
+            $table->dropColumn('back_url_mp');
+            $table->dropColumn('billing_day_proportional_mp');
+            $table->dropColumn('has_billing_day_mp');
         });
     }
 }
