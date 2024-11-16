@@ -287,8 +287,7 @@ class SuscripcionesService
         Log::info('SuscripcionesService - updateAllSubscription');
         $date = Carbon::now()->subDays(60);
 
-        $suscripcions = Suscripcion::where('suscripcion_status', 'activa')
-        ->where('created_at', '>=', $date);
+        $suscripcions = Suscripcion::where('updated_at', '>=', $date);
 
         if ($suscripcion_id) {
             $suscripcions = $suscripcions->where('suscripcion_id',  $suscripcion_id );
