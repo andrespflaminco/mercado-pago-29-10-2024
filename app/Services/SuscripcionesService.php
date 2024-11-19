@@ -290,7 +290,7 @@ class SuscripcionesService
         $suscripcions = Suscripcion::where('updated_at', '>=', $date);
 
         if ($suscripcion_id) {
-            $suscripcions = $suscripcions->where('suscripcion_id',  $suscripcion_id );
+            $suscripcions = $suscripcions->where('suscripcion_id',  $suscripcion_id);
         }
 
         $suscripcions =  $suscripcions->get();
@@ -298,10 +298,40 @@ class SuscripcionesService
         $preapproval_suscripcion = null;
 
         foreach ($suscripcions as $key => $suscripcion) {
-            Log::info('SuscripcionesService - updateAllSubscription - '.$suscripcion->suscripcion_id);
+
+            Log::info('SuscripcionesService - updateAllSubscription - ' . $suscripcion->suscripcion_id);
 
             $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($suscripcion->suscripcion_id);
-            Log::info($preapproval_suscripcion);
+
+            /* TEST TEST TEST TEST TEST */
+
+            /* if ($preapproval_suscripcion['response']['subscription_id'] == '74a6e2e4a47d48d2ae284de82c457158') {
+                Log::alert('paso a false');
+                $preapproval_suscripcion = false;
+            } */
+
+            /* TEST TEST TEST TEST TEST */
+
+            if (!$preapproval_suscripcion) {
+                $subscriptionId = $suscripcion->suscripcion_id;
+
+                $data_preapproval_array = $this->get_preapproval_payments_search($subscriptionId);
+
+                if ($data_preapproval_array) {
+                    /* Filtro el array recibido de MP con todas las suscripciones por la suscripción NO encontrada en el paso anterior */
+                    $result = array_filter($data_preapproval_array, function ($item) use ($subscriptionId) {
+                        return isset($item['subscription_id']) && $item['subscription_id'] === $subscriptionId;
+                    });
+
+                    $result = array_values($result);
+                    if (!empty($result)) {
+                        $filteredItem = $result[0];
+                        $preapproval_suscripcion['response'] = $filteredItem;
+                    } else {
+                        $preapproval_suscripcion = false;
+                    }
+                }
+            }
 
             if ($preapproval_suscripcion) {
                 $data_preapproval = $this->setDataPreapprovalSuscription($preapproval_suscripcion);
@@ -311,6 +341,14 @@ class SuscripcionesService
         }
 
         return $preapproval_suscripcion;
+    }
+
+    function get_preapproval_payments_search($suscripcion_id)
+    {
+        $suscripcion = Suscripcion::where('suscripcion_id', $suscripcion_id)->first();
+        $data_preapproval_array = $this->MPService->get_preapproval_payments_search($suscripcion);
+
+        return $data_preapproval_array;
     }
 
     function setDataPreapprovalSuscription($preapproval_suscripcion)
@@ -372,7 +410,7 @@ class SuscripcionesService
 
         ];
 
-        if(isset($data['status']) && $data['status'] == 'authorized'){
+        if (isset($data['status']) && $data['status'] == 'authorized') {
             $data_update['suscripcion_status'] = 'activ';
             $data_update['cobro_status'] = 'pagad';
         }
@@ -392,11 +430,11 @@ class SuscripcionesService
     {
         $data = $this->convertFechas($data);
 
-        $SuscripcionControl = SuscripcionControl::where('suscripcion_id',$data['id'])->orderBy('id','DESC')->first();
+        $SuscripcionControl = SuscripcionControl::where('suscripcion_id', $data['id'])->orderBy('id', 'DESC')->first();
 
-        if($SuscripcionControl){
+        if ($SuscripcionControl) {
 
-            if($SuscripcionControl->last_charged_date_mp == $data['last_charged_date']){
+            if ($SuscripcionControl->last_charged_date_mp == $data['last_charged_date']) {
                 return null;
             }
         }

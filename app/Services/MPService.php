@@ -96,7 +96,7 @@ class MPService
 
             $dataPreference = $this->generatePreapprovalPlan($dataFormat);
             Log::alert('MP resultado');
-            
+
 
 
 
@@ -129,7 +129,6 @@ class MPService
 
                         $data['trial_frequency'] = $dataPreference['response']['auto_recurring']['free_trial']['frequency'];
                         $data['trial_frequency_type'] = $dataPreference['response']['auto_recurring']['free_trial']['frequency_type'];
-
                     }
                     Log::alert('DATA');
                     //Log::alert($data);
@@ -159,7 +158,7 @@ class MPService
                 'frequency' => $params['frequency'],
                 'frequency_type' => $params['frequency_type'],
                 //'repetitions' => 12,                
-                'billing_day_proportional' => $params['billing_day_proportional'],      
+                'billing_day_proportional' => $params['billing_day_proportional'],
                 'transaction_amount' => floatval($params['monto']),
                 'currency_id' => 'ARS',
             ),
@@ -168,7 +167,7 @@ class MPService
         ];
 
         if ($params['billing_day']) {
-            $preferenceData['auto_recurring']['billing_day'] =$params['billing_day'];
+            $preferenceData['auto_recurring']['billing_day'] = $params['billing_day'];
         }
 
         // Verificar si $free_days es mayor a 0
@@ -178,8 +177,8 @@ class MPService
                 'frequency' => $params['trial_frequency'],
                 'frequency_type' => $params['trial_frequency_type'],
             ];
-         }
-        
+        }
+
 
         //Log::info(json_encode($preferenceData));
         Log::info($preferenceData);
@@ -775,6 +774,46 @@ class MPService
             $mercadoPago = new MP(null, $MP_APP_ID, $MP_APP_SECRET, $MP_INTEGRATOR_ID);
             $data_preapproval = $mercadoPago->get_preapproval_payment($id);
             return $data_preapproval;
+        } catch (\Exception $e) {
+            Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - Exception');
+            Log::info($e->getMessage());
+            session(['error_mp' => $e->getMessage()]);
+            if ($e->getMessage() == 'invalid_token') {
+                Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - invalid_token');
+            }
+            return false;
+        }
+    }
+
+    function get_preapproval_payments_search($suscripcion)
+    {
+
+        $user = User::find($suscripcion->user_id);
+        if ($user) {
+            $preapproval_plan_id = $suscripcion->plan_id;
+            $payer_email = $user->email;
+        }
+
+        Log::info('MPService - get_preapproval_payments_search - results');
+
+        try {
+            $MP_APP_ID = config('app.MP_APP_ID');
+            $MP_APP_SECRET = config('app.MP_APP_SECRET');
+            $MP_INTEGRATOR_ID = config('app.MP_INTEGRATOR_ID');
+
+            $mercadoPago = new MP(null, $MP_APP_ID, $MP_APP_SECRET, $MP_INTEGRATOR_ID);
+
+            $array_suscripcion = [
+                'preapproval_plan_id' => $preapproval_plan_id,
+                'payer_email' => $payer_email
+            ];
+
+            $data_preapproval = $mercadoPago->get_preapproval_payments_search($array_suscripcion);
+
+            Log::alert($data_preapproval['response']['results']);
+
+
+            return $data_preapproval['response']['results'];
         } catch (\Exception $e) {
             Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - Exception');
             Log::info($e->getMessage());
