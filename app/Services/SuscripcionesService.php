@@ -302,10 +302,11 @@ class SuscripcionesService
             Log::info('SuscripcionesService - updateAllSubscription - ' . $suscripcion->suscripcion_id);
 
             $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($suscripcion->suscripcion_id);
+            Log::alert($preapproval_suscripcion);
 
             /* TEST TEST TEST TEST TEST */
 
-            /* if ($preapproval_suscripcion['response']['subscription_id'] == '74a6e2e4a47d48d2ae284de82c457158') {
+           /*  if ($preapproval_suscripcion['response']['subscription_id'] == '74a6e2e4a47d48d2ae284de82c457158') {
                 Log::alert('paso a false');
                 $preapproval_suscripcion = false;
             } */
@@ -317,19 +318,9 @@ class SuscripcionesService
 
                 $data_preapproval_array = $this->get_preapproval_payments_search($subscriptionId);
 
-                if ($data_preapproval_array) {
-                    /* Filtro el array recibido de MP con todas las suscripciones por la suscripción NO encontrada en el paso anterior */
-                    $result = array_filter($data_preapproval_array, function ($item) use ($subscriptionId) {
-                        return isset($item['subscription_id']) && $item['subscription_id'] === $subscriptionId;
-                    });
+                if ($data_preapproval_array) {                    
 
-                    $result = array_values($result);
-                    if (!empty($result)) {
-                        $filteredItem = $result[0];
-                        $preapproval_suscripcion['response'] = $filteredItem;
-                    } else {
-                        $preapproval_suscripcion = false;
-                    }
+                    $preapproval_suscripcion['response'] = $data_preapproval_array[0];
                 }
             }
 
@@ -378,6 +369,8 @@ class SuscripcionesService
         $data = $this->convertFechas($data);
 
         $data_update = [
+
+            'suscripcion_id' => $data['subscription_id'] ?? null,
 
             'collector_id_mp' => $data['collector_id'] ?? null,
             'application_id_mp' => $data['application_id'] ?? null,
@@ -440,6 +433,9 @@ class SuscripcionesService
         }
 
         $data_update = [
+
+            'suscripcion_id' => $data['subscription_id'] ?? null,
+
 
             'collector_id_mp' => $data['collector_id'] ?? null,
             'application_id_mp' => $data['application_id'] ?? null,

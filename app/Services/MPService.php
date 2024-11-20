@@ -792,6 +792,8 @@ class MPService
         if ($user) {
             $preapproval_plan_id = $suscripcion->plan_id;
             $payer_email = $user->email;
+            
+            $payer_id = $suscripcion->payer_id; //solo a los fines de test
         }
 
         Log::info('MPService - get_preapproval_payments_search - results');
@@ -806,6 +808,7 @@ class MPService
             $array_suscripcion = [
                 'preapproval_plan_id' => $preapproval_plan_id,
                 'payer_email' => $payer_email
+                //'payer_id' => $payer_id
             ];
 
             $data_preapproval = $mercadoPago->get_preapproval_payments_search($array_suscripcion);
