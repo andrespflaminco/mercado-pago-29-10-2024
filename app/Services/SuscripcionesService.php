@@ -6,6 +6,7 @@ use App\Models\ModulosSuscripcion;
 use App\Models\planes_suscripcion;
 use App\Models\Suscripcion;
 use App\Models\SuscripcionControl;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -306,7 +307,7 @@ class SuscripcionesService
 
             /* TEST TEST TEST TEST TEST */
 
-           /*  if ($preapproval_suscripcion['response']['subscription_id'] == '74a6e2e4a47d48d2ae284de82c457158') {
+            /* if ($preapproval_suscripcion['response']['subscription_id'] == '74a6e2e4a47d48d2ae284de82c457158') {
                 Log::alert('paso a false');
                 $preapproval_suscripcion = false;
             } */
@@ -316,11 +317,13 @@ class SuscripcionesService
             if (!$preapproval_suscripcion) {
                 $subscriptionId = $suscripcion->suscripcion_id;
 
-                $data_preapproval_array = $this->get_preapproval_payments_search($subscriptionId);
+                //$data_preapproval_array = $this->get_preapproval_payments_search($subscriptionId);
+                $data_preapproval_array = $this->MPService->get_preapproval_payments_search_curl($subscriptionId);
 
-                if ($data_preapproval_array) {                    
 
-                    $preapproval_suscripcion['response'] = $data_preapproval_array[0];
+                if ($data_preapproval_array) {
+
+                    $preapproval_suscripcion['response'] = $data_preapproval_array;
                 }
             }
 
@@ -341,6 +344,8 @@ class SuscripcionesService
 
         return $data_preapproval_array;
     }
+
+
 
     function setDataPreapprovalSuscription($preapproval_suscripcion)
     {

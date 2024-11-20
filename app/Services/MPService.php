@@ -792,7 +792,7 @@ class MPService
         if ($user) {
             $preapproval_plan_id = $suscripcion->plan_id;
             $payer_email = $user->email;
-            
+
             $payer_id = $suscripcion->payer_id; //solo a los fines de test
         }
 
@@ -817,6 +817,89 @@ class MPService
 
 
             return $data_preapproval['response']['results'];
+        } catch (\Exception $e) {
+            Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - Exception');
+            Log::info($e->getMessage());
+            session(['error_mp' => $e->getMessage()]);
+            if ($e->getMessage() == 'invalid_token') {
+                Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - invalid_token');
+            }
+            return false;
+        }
+    }
+
+    function get_preapproval_payments_search_curl($suscripcion_id)
+    {
+        $suscripcion = Suscripcion::where('suscripcion_id', $suscripcion_id)->first();
+
+        $user = User::find($suscripcion->user_id);
+        if ($user) {
+            $preapproval_plan_id = $suscripcion->plan_id;
+            $payer_email = $user->email;
+            $payer_id = $suscripcion->payer_id; //solo a los fines de test
+        }
+
+
+        try {
+
+            $acces_token = $this->getAccesTokenMP();
+
+            $curl = curl_init();
+
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.mercadopago.com/preapproval/search?preapproval_plan_id=' . $preapproval_plan_id . '&payer_email=' . $payer_email,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_HTTPHEADER => array(
+                    'Accept: application/json',
+                    'Authorization: Bearer ' . $acces_token
+                ),
+            ));
+
+            $response = curl_exec($curl);
+
+            curl_close($curl);
+
+
+            $data = ["response" => json_decode($response, true)];
+
+            if (isset($data['response']['results']) && isset($data['response']['results'][0])) {
+                Log::alert('nueva dataaaaaaaaa');
+                Log::alert($data['response']['results'][0]);
+
+
+                return $data['response']['results'][0];
+            } else return false;
+        } catch (\Exception $e) {
+            Log::info('MercadoPagoService - get_preapproval_payments_search_curl - Exception');
+            Log::info($e->getMessage());
+            session(['error_mp' => $e->getMessage()]);
+            if ($e->getMessage() == 'invalid_token') {
+                Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - invalid_token');
+            }
+            return false;
+        }
+    }
+
+    function getAccesTokenMP()
+    {
+        try {
+            $MP_APP_ID = config('app.MP_APP_ID');
+            $MP_APP_SECRET = config('app.MP_APP_SECRET');
+            $MP_INTEGRATOR_ID = config('app.MP_INTEGRATOR_ID');
+
+            $mercadoPago = new MP(null, $MP_APP_ID, $MP_APP_SECRET, $MP_INTEGRATOR_ID);
+
+            $access_token = $mercadoPago->get_access_token();
+
+            Log::alert($access_token);
+
+            return $access_token;
         } catch (\Exception $e) {
             Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - Exception');
             Log::info($e->getMessage());
