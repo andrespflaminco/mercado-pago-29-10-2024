@@ -305,24 +305,23 @@ class SuscripcionesService
             $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($suscripcion->suscripcion_id);
             Log::alert($preapproval_suscripcion);
 
-            /* TEST TEST TEST TEST TEST */
+            /********************* TEST TEST TEST TEST TEST ******************************/
 
             /* if ($preapproval_suscripcion['response']['subscription_id'] == '74a6e2e4a47d48d2ae284de82c457158') {
                 Log::alert('paso a false');
                 $preapproval_suscripcion = false;
             } */
 
-            /* TEST TEST TEST TEST TEST */
+            /*********************  TEST TEST TEST TEST TEST ******************************/
 
             if (!$preapproval_suscripcion) {
                 $subscriptionId = $suscripcion->suscripcion_id;
 
-                //$data_preapproval_array = $this->get_preapproval_payments_search($subscriptionId);
-                $data_preapproval_array = $this->MPService->get_preapproval_payments_search_curl($subscriptionId);
+                $data_preapproval_array = $this->get_preapproval_payments_search($subscriptionId);
+                //$data_preapproval_array = $this->MPService->get_preapproval_payments_search_curl($subscriptionId);
 
 
                 if ($data_preapproval_array) {
-
                     $preapproval_suscripcion['response'] = $data_preapproval_array;
                 }
             }
@@ -338,7 +337,7 @@ class SuscripcionesService
     }
 
     function get_preapproval_payments_search($suscripcion_id)
-    {
+    {        
         $suscripcion = Suscripcion::where('suscripcion_id', $suscripcion_id)->first();
         $data_preapproval_array = $this->MPService->get_preapproval_payments_search($suscripcion);
 

@@ -792,7 +792,6 @@ class MPService
         if ($user) {
             $preapproval_plan_id = $suscripcion->plan_id;
             $payer_email = $user->email;
-
             $payer_id = $suscripcion->payer_id; //solo a los fines de test
         }
 
@@ -807,16 +806,21 @@ class MPService
 
             $array_suscripcion = [
                 'preapproval_plan_id' => $preapproval_plan_id,
-                'payer_email' => $payer_email
-                //'payer_id' => $payer_id
+                'plan_id' => $preapproval_plan_id,
+                //'payer_email' => $payer_email
+                'payer_id' => $payer_id
             ];
+            Log::alert( $array_suscripcion);
 
             $data_preapproval = $mercadoPago->get_preapproval_payments_search($array_suscripcion);
 
             Log::alert($data_preapproval['response']['results']);
 
+            if(isset($data_preapproval['response']) && isset($data_preapproval['response']['results']) && isset($data_preapproval['response']['results'][0])){
+                return $data_preapproval['response']['results'][0];
+            }
 
-            return $data_preapproval['response']['results'];
+            return [];
         } catch (\Exception $e) {
             Log::info('MercadoPagoService - getPreapprovalBySuscriptionId - Exception');
             Log::info($e->getMessage());
