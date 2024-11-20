@@ -6,6 +6,7 @@ use App\Models\ModulosSuscripcion;
 use App\Models\planes_suscripcion;
 use App\Models\Suscripcion;
 use App\Models\SuscripcionControl;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -290,7 +291,7 @@ class SuscripcionesService
         $suscripcions = Suscripcion::where('updated_at', '>=', $date);
 
         if ($suscripcion_id) {
-            $suscripcions = $suscripcions->where('suscripcion_id',  $suscripcion_id );
+            $suscripcions = $suscripcions->where('suscripcion_id',  $suscripcion_id);
         }
 
         $suscripcions =  $suscripcions->get();
@@ -298,10 +299,33 @@ class SuscripcionesService
         $preapproval_suscripcion = null;
 
         foreach ($suscripcions as $key => $suscripcion) {
-            Log::info('SuscripcionesService - updateAllSubscription - '.$suscripcion->suscripcion_id);
+
+            Log::info('SuscripcionesService - updateAllSubscription - ' . $suscripcion->suscripcion_id);
 
             $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($suscripcion->suscripcion_id);
-            Log::info($preapproval_suscripcion);
+            Log::alert($preapproval_suscripcion);
+
+            /* TEST TEST TEST TEST TEST */
+
+            /* if ($preapproval_suscripcion['response']['subscription_id'] == '74a6e2e4a47d48d2ae284de82c457158') {
+                Log::alert('paso a false');
+                $preapproval_suscripcion = false;
+            } */
+
+            /* TEST TEST TEST TEST TEST */
+
+            if (!$preapproval_suscripcion) {
+                $subscriptionId = $suscripcion->suscripcion_id;
+
+                //$data_preapproval_array = $this->get_preapproval_payments_search($subscriptionId);
+                $data_preapproval_array = $this->MPService->get_preapproval_payments_search_curl($subscriptionId);
+
+
+                if ($data_preapproval_array) {
+
+                    $preapproval_suscripcion['response'] = $data_preapproval_array;
+                }
+            }
 
             if ($preapproval_suscripcion) {
                 $data_preapproval = $this->setDataPreapprovalSuscription($preapproval_suscripcion);
@@ -312,6 +336,16 @@ class SuscripcionesService
 
         return $preapproval_suscripcion;
     }
+
+    function get_preapproval_payments_search($suscripcion_id)
+    {
+        $suscripcion = Suscripcion::where('suscripcion_id', $suscripcion_id)->first();
+        $data_preapproval_array = $this->MPService->get_preapproval_payments_search($suscripcion);
+
+        return $data_preapproval_array;
+    }
+
+
 
     function setDataPreapprovalSuscription($preapproval_suscripcion)
     {
@@ -340,6 +374,8 @@ class SuscripcionesService
         $data = $this->convertFechas($data);
 
         $data_update = [
+
+            'suscripcion_id' => $data['subscription_id'] ?? null,
 
             'collector_id_mp' => $data['collector_id'] ?? null,
             'application_id_mp' => $data['application_id'] ?? null,
@@ -372,7 +408,7 @@ class SuscripcionesService
 
         ];
 
-        if(isset($data['status']) && $data['status'] == 'authorized'){
+        if (isset($data['status']) && $data['status'] == 'authorized') {
             $data_update['suscripcion_status'] = 'activ';
             $data_update['cobro_status'] = 'pagad';
         }
@@ -392,16 +428,19 @@ class SuscripcionesService
     {
         $data = $this->convertFechas($data);
 
-        $SuscripcionControl = SuscripcionControl::where('suscripcion_id',$data['id'])->orderBy('id','DESC')->first();
+        $SuscripcionControl = SuscripcionControl::where('suscripcion_id', $data['id'])->orderBy('id', 'DESC')->first();
 
-        if($SuscripcionControl){
+        if ($SuscripcionControl) {
 
-            if($SuscripcionControl->last_charged_date_mp == $data['last_charged_date']){
+            if ($SuscripcionControl->last_charged_date_mp == $data['last_charged_date']) {
                 return null;
             }
         }
 
         $data_update = [
+
+            'suscripcion_id' => $data['subscription_id'] ?? null,
+
 
             'collector_id_mp' => $data['collector_id'] ?? null,
             'application_id_mp' => $data['application_id'] ?? null,
