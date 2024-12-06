@@ -57,7 +57,7 @@ class MPService
             if ($params['quantity'] > 0) {
                 $users_amount = $params['quantity'] * floatval(config('app.USER_AMOUNT_VALUE'));
                 $users_amount_format = number_format($users_amount, 0, ',', '.');
-                $monto =  $monto + $users_amount;
+               
                 $descripcion = $descripcion . ' + ' . $params['quantity'] . ' usuarios/s ($' . $users_amount_format . ')';
             }
 
@@ -68,10 +68,23 @@ class MPService
                 foreach ($modulos_seleccionados as $modulo_id) {
                     $modulo = ModulosSuscripcion::find($modulo_id);
                     $modulo_amount_format = number_format($modulo->monto, 0, ',', '.');
-                    $monto =  $monto + $modulo->monto;
+                    
                     $modulos_amount += $modulo->monto;
                     $descripcion = $descripcion . ' + Módulo: ' . $modulo->nombre . ' ($' . $modulo_amount_format . ')';
                 }
+            }
+
+            if($planSuscripcion->frequency){
+                $users_amount =  $users_amount * $planSuscripcion->frequency;
+                $modulos_amount = $modulos_amount * $planSuscripcion->frequency;
+            }
+
+            if( $users_amount ){
+                $monto =  $monto + $users_amount;
+            }
+
+            if($modulos_amount){
+                $monto =  $monto + $modulos_amount;
             }
 
             $data = [
@@ -806,9 +819,10 @@ class MPService
 
             $array_suscripcion = [
                 'preapproval_plan_id' => $preapproval_plan_id,
-                'plan_id' => $preapproval_plan_id,
+                //'q' => $preapproval_plan_id,
+                //'plan_id' => $preapproval_plan_id,
                 //'payer_email' => $payer_email
-                'payer_id' => $payer_id
+                //'payer_id' => $payer_id
             ];
             Log::alert( $array_suscripcion);
 
