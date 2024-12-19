@@ -93,6 +93,8 @@ class SuscripcionesService
             'action' => 'CANCELADA',
             'suscripcion_status' => 'cancelada',
             'cobro_status' => 'cancelado',
+            'proceso_asociado' => 'Usuario configuración',
+
         ];
 
         $suscripcionControl = $this->suscripcionControlService->insert($suscripcionData);
@@ -260,6 +262,7 @@ class SuscripcionesService
         $suscripcionData['fecha_suscripcion'] = $sysdate;
         $suscripcionData['monto_plan'] = $data['monto_plan'];
         $suscripcionData['action'] = 'GENERADA';
+        $suscripcionData['proceso_asociado'] = 'Usuario generación';
 
         $this->suscripcionControlService = new SuscripcionControlService();
         $suscripcionControl = $this->suscripcionControlService->insert($suscripcionData);
@@ -299,7 +302,7 @@ class SuscripcionesService
     function updateAllSubscription($suscripcion_id = null)
     {
         Log::info('SuscripcionesService - updateAllSubscription');
-        $date = Carbon::now()->subDays(60);
+        $date = Carbon::now()->subDays(90);
 
         $suscripcions = Suscripcion::where('updated_at', '>=', $date);
 
@@ -318,21 +321,11 @@ class SuscripcionesService
             $preapproval_suscripcion = $this->MPService->getPreapprovalBySuscriptionId($suscripcion->suscripcion_id);
             Log::alert($preapproval_suscripcion);
 
-            /********************* TEST TEST TEST TEST TEST ******************************/
-
-            /* if ($preapproval_suscripcion['response']['subscription_id'] == '74a6e2e4a47d48d2ae284de82c457158') {
-                Log::alert('paso a false');
-                $preapproval_suscripcion = false;
-            } */
-
-            /*********************  TEST TEST TEST TEST TEST ******************************/
-
             if (!$preapproval_suscripcion) {
                 $subscriptionId = $suscripcion->suscripcion_id;
 
                 $data_preapproval_array = $this->get_preapproval_payments_search($subscriptionId);
                 //$data_preapproval_array = $this->MPService->get_preapproval_payments_search_curl($subscriptionId);
-
 
                 if ($data_preapproval_array) {
                     $preapproval_suscripcion['response'] = $data_preapproval_array;
@@ -389,34 +382,51 @@ class SuscripcionesService
 
             'suscripcion_id' => $data['subscription_id'] ?? null,
 
-            'collector_id_mp' => $data['collector_id'] ?? null,
             'application_id_mp' => $data['application_id'] ?? null,
+            'collector_id_mp' => $data['collector_id'] ?? null,
             'reason_mp' => $data['reason'] ?? null,
-            'date_created_mp' => $data['date_created'] ?? null,
-            'last_modified_mp' => $data['last_modified'] ?? null,
+            //preapproval
+            'external_reference' => $data['external_reference'] ?? null,
+            'back_url_mp' => $data['back_url'] ?? null,
+            //init            
+
+            //auto_recurring----
             'frequency_mp' => $data['frequency'] ?? null,
             'frequency_type_mp' => $data['frequency_type'] ?? null,
-            'transaction_amount_mp' => $data['transaction_amount'] ?? null,
-            'currency_id_mp' => $data['currency_id'] ?? null,
             'start_date_mp' => $data['start_date'] ?? null,
             'end_date_mp' => $data['end_date'] ?? null,
+            'currency_id_mp' => $data['currency_id'] ?? null,
+            'transaction_amount_mp' => $data['transaction_amount'] ?? null,
+
+            //auto_recurring- free_trial---
             'free_trial_mp' => $data['free_trial'] ?? null,
-            'quotas_mp' => $data['quotas'] ?? null,
-            'charged_quantity_mp' => $data['charged_quantity'] ?? null,
-            'pending_charge_quantity_mp' => $data['pending_charge_quantity'] ?? null,
-            'charged_amount_mp' => $data['charged_amount'] ?? null,
-            'pending_charge_amount_mp' => $data['pending_charge_amount'] ?? null,
-            'semaphore_mp' => $data['semaphore'] ?? null,
-            'last_charged_date_mp' => $data['last_charged_date'] ?? null,
-            'last_charged_amount_mp' => $data['last_charged_amount'] ?? null,
-            'next_payment_date_mp' => $data['next_payment_date'] ?? null,
+
+            'first_invoice_offset_mp' => $data['first_invoice_offset'] ?? null,
+            'payer_id' => $data['payer_id'] ?? null,
+            'payer_first_name_mp' => $data['payer_first_name'] ?? null,
+            'payer_last_name_mp' => $data['payer_last_name'] ?? null,
             'payment_method_id_mp' => $data['payment_method_id'] ?? null,
             'payment_method_id_secondary_mp' => $data['payment_method_id_secondary'] ?? null,
-            'first_invoice_offset_mp' => $data['first_invoice_offset'] ?? null,
+            'next_payment_date_mp' => $data['next_payment_date'] ?? null,
+            'date_created_mp' => $data['date_created'] ?? null,
+            'last_modified_mp' => $data['last_modified'] ?? null,
+
+            //summarized ---
+            'quotas_mp' => $data['quotas'] ?? null,
+            'charged_quantity_mp' => $data['charged_quantity'] ?? null,
+            'charged_amount_mp' => $data['charged_amount'] ?? null,
+            'pending_charge_quantity_mp' => $data['pending_charge_quantity'] ?? null,
+            'pending_charge_amount_mp' => $data['pending_charge_amount'] ?? null,
+            'last_charged_date_mp' => $data['last_charged_date'] ?? null,
+            'last_charged_amount_mp' => $data['last_charged_amount'] ?? null,
+            'semaphore_mp' => $data['semaphore'] ?? null,
+
             'billing_day_proportional_mp' => $data['billing_day_proportional'] ?? null,
             'has_billing_day_mp' => $data['has_billing_day'] ?? null,
-            'back_url_mp' => $data['back_url'] ?? null,
+
             'status_mp' => $data['status'] ?? null,
+            'proceso_asociado' => 'UpdatePreapprovalStatus',
+            'observaciones_mp' => $data['observaciones'] ?? null,
 
         ];
 
@@ -426,26 +436,28 @@ class SuscripcionesService
         if ($suscripcion->user_id) {
             $user_update = User::find($suscripcion->user_id);
         }
+        
+        $confirmed = 0;
+        $confirmed_at = null;
+        $data_update['suscripcion_status'] = 'pending';
+        $data_update['cobro_status'] = 'pending';
 
         if (isset($data['status']) && $data['status'] == 'authorized') {
-            if ($user_update) {
-                $user_update->confirmed = 1;
-                $user_update->confirmed_at = $sysdate;
-                $user_update->save();
-            }
+            $confirmed = 1;
+            $confirmed_at = $sysdate;
 
             $data_update['suscripcion_status'] = 'activa';
             $data_update['cobro_status'] = 'pendiente';
 
-            if (isset($data['last_charged_date_mp']) && $data['last_charged_date_mp'] && !empty($data['last_charged_date_mp']) && $data['last_charged_date_mp'] != null) {
+            if (isset($data['last_charged_date']) && $data['last_charged_date'] && !empty($data['last_charged_date']) && $data['last_charged_date'] != null) {
                 $data_update['cobro_status'] = 'pagada';
             }
-        } else {
-            if ($user_update) {
-                $user_update->confirmed = 0;
-                $user_update->confirmed_at = null;
-                $user_update->save();
-            }
+        }
+
+        if ($user_update) {
+            $user_update->confirmed = $confirmed;
+            $user_update->confirmed_at = $confirmed_at;
+            $user_update->save();
         }
 
         try {
@@ -463,11 +475,10 @@ class SuscripcionesService
     {
         $data = $this->convertFechas($data);
 
-        $SuscripcionControl = SuscripcionControl::where('suscripcion_id', $data['id'])->orderBy('id', 'DESC')->first();
+        $SuscripcionControl = SuscripcionControl::where('suscripcion_id', $data['id'])->orderBy('last_modified_mp', 'DESC')->first();
 
         if ($SuscripcionControl) {
-
-            if (isset($data['last_charged_date']) && $SuscripcionControl->last_charged_date_mp == $data['last_charged_date']) {
+            if (isset($data['last_modified']) && $SuscripcionControl->last_modified_mp == $data['last_modified']) {
                 return null;
             }
         }
@@ -476,38 +487,50 @@ class SuscripcionesService
 
             'suscripcion_id' => $data['subscription_id'] ?? null,
 
-
-            'collector_id_mp' => $data['collector_id'] ?? null,
             'application_id_mp' => $data['application_id'] ?? null,
+            'collector_id_mp' => $data['collector_id'] ?? null,
+            'plan_id' => $data['preapproval_plan_id'] ?? null,
             'reason_mp' => $data['reason'] ?? null,
-            'date_created_mp' => $data['date_created'] ?? null,
-            'last_modified_mp' => $data['last_modified'] ?? null,
+            'external_reference' => $data['external_reference'] ?? null,
+            'back_url_mp' => $data['back_url'] ?? null,
+
+            //frecuency ---
             'frequency_mp' => $data['frequency'] ?? null,
             'frequency_type_mp' => $data['frequency_type'] ?? null,
-            'transaction_amount_mp' => $data['transaction_amount'] ?? null,
-            'currency_id_mp' => $data['currency_id'] ?? null,
             'start_date_mp' => $data['start_date'] ?? null,
             'end_date_mp' => $data['end_date'] ?? null,
+            'currency_id_mp' => $data['currency_id'] ?? null,
+            'transaction_amount_mp' => $data['transaction_amount'] ?? null,
+            //frecuency - free_trial ---
             'free_trial_mp' => $data['free_trial'] ?? null,
-            'quotas_mp' => $data['quotas'] ?? null,
-            'charged_quantity_mp' => $data['charged_quantity'] ?? null,
-            'pending_charge_quantity_mp' => $data['pending_charge_quantity'] ?? null,
-            'charged_amount_mp' => $data['charged_amount'] ?? null,
-            'pending_charge_amount_mp' => $data['pending_charge_amount'] ?? null,
-            'semaphore_mp' => $data['semaphore'] ?? null,
-            'last_charged_date_mp' => $data['last_charged_date'] ?? null,
-            'last_charged_amount_mp' => $data['last_charged_amount'] ?? null,
-            'next_payment_date_mp' => $data['next_payment_date'] ?? null,
+
+            'first_invoice_offset_mp' => $data['first_invoice_offset'] ?? null,
+            'payer_id' => $data['payer_id'] ?? null,
+            'payer_first_name_mp' => $data['payer_first_name'] ?? null,
+            'payer_last_name_mp' => $data['payer_last_name'] ?? null,
             'payment_method_id_mp' => $data['payment_method_id'] ?? null,
             'payment_method_id_secondary_mp' => $data['payment_method_id_secondary'] ?? null,
-            'first_invoice_offset_mp' => $data['first_invoice_offset'] ?? null,
+            'next_payment_date_mp' => $data['next_payment_date'] ?? null,
+            'date_created_mp' => $data['date_created'] ?? null,
+            'last_modified_mp' => $data['last_modified'] ?? null,
 
-            'plan_id' => $data['preapproval_plan_id'] ?? null,
+            //summarized
+            'quotas_mp' => $data['quotas'] ?? null,
+            'charged_quantity_mp' => $data['charged_quantity'] ?? null,
+            'charged_amount_mp' => $data['charged_amount'] ?? null,
+            'pending_charge_quantity_mp' => $data['pending_charge_quantity'] ?? null,
+            'pending_charge_amount_mp' => $data['pending_charge_amount'] ?? null,
+            'last_charged_date_mp' => $data['last_charged_date'] ?? null,
+            'last_charged_amount_mp' => $data['last_charged_amount'] ?? null,
+            'semaphore_mp' => $data['semaphore'] ?? null,
 
             'billing_day_proportional_mp' => $data['billing_day_proportional'] ?? null,
             'has_billing_day_mp' => $data['has_billing_day'] ?? null,
-            'back_url_mp' => $data['back_url'] ?? null,
+
             'status_mp' => $data['status'] ?? null,
+
+            'proceso_asociado' => 'UpdatePreapprovalStatus',
+            'observaciones_mp' => $data['observaciones'] ?? null,
 
         ];
 

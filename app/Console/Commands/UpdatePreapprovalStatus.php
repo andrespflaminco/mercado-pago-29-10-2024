@@ -61,8 +61,8 @@ class UpdatePreapprovalStatus extends Command
     {
         set_time_limit(0);   
         
-        //$this->suscripcionesService->updateAllSubscription('9cc8da79c78f421299a31ede5208a788');
-        $this->suscripcionesService->updateAllSubscription(null);
+        $this->suscripcionesService->updateAllSubscription('9cc8da');
+        //$this->suscripcionesService->updateAllSubscription(null);
         Log::alert('Fin del proceso');
     }
 }

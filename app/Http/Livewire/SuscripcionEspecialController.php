@@ -129,6 +129,7 @@ class SuscripcionEspecialController extends Component
 
     $urlBase = env('APP_URL');
 
+    //valida si ya tiene suscripcion, y si tiene muestra vista con mensaje y botón para ir a suscripción configuración
     if(auth()->user() && auth()->user()->suscripcion){
       Log::info('SuscripcionEspecialController - render - suscripcion');
 
@@ -655,6 +656,23 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
   public function confirmarSuscripcion(Request $request)
   {
       
+    $urlBase = env('APP_URL');
+
+    //valida si ya tiene suscripcion, y si tiene muestra vista con mensaje y botón para ir a suscripción configuración
+    if(auth()->user() && auth()->user()->suscripcion){
+      Log::info('SuscripcionEspecialController - confirmarSuscripcion - suscripcion');
+
+      $data =  [
+        'slug' => $this->slug,
+        'url_base' => $urlBase,
+        'url_redirect' => $urlBase . '/suscripcion-configuracion' ,
+      ];
+
+      return view('auth.suscripcion-mercadopago-existente', $data)
+      ->extends('layouts.theme-pos-especial.app-base')
+      ->section('content');
+    }
+    
     $user = User::find(auth()->user()->id);
     $user->intento_pago = "ARREPENTIMIENTO";
     $user->save();

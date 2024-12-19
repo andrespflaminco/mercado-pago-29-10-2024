@@ -16,7 +16,7 @@ class AddColumnsMpToSuscriptionsTable2 extends Migration
         Schema::table('suscripcions', function (Blueprint $table) {
             $table->string('payer_first_name_mp')->nullable()->after('reason_mp');
             $table->string('payer_last_name_mp')->nullable()->after('reason_mp');
-            $table->string('observaciones_mp')->nullable()->after('has_billing_day_mp');
+            $table->text('observaciones_mp')->nullable()->after('has_billing_day_mp');
             $table->string('proceso_asociado')->nullable()->after('proximo_cobro');         
              
         });
@@ -24,7 +24,7 @@ class AddColumnsMpToSuscriptionsTable2 extends Migration
         Schema::table('suscripcion_controls', function (Blueprint $table) {
             $table->string('payer_first_name_mp')->nullable()->after('reason_mp');
             $table->string('payer_last_name_mp')->nullable()->after('reason_mp');
-            $table->string('observaciones_mp')->nullable()->after('has_billing_day_mp');
+            $table->text('observaciones_mp')->nullable()->after('has_billing_day_mp');
             $table->string('proceso_asociado')->nullable()->after('modulos_amount');         
              
         });

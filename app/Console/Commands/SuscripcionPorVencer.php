@@ -75,6 +75,7 @@ class SuscripcionPorVencer extends Command
                         'suscripcion_id' => $suscripcion->suscripcion_id,
                         'monto_plan' => $suscripcion->monto_plan,
                         'action' => 'POR VENCER',
+                        'proceso_asociado' => 'SuscripcionPorVencer',
                     ];
                     $suscripcionControl = $this->suscripcionControlService->insert($suscripcionData);
                 }

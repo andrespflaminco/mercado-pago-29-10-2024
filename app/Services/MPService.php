@@ -57,7 +57,7 @@ class MPService
             if ($params['quantity'] > 0) {
                 $users_amount = $params['quantity'] * floatval(config('app.USER_AMOUNT_VALUE'));
                 $users_amount_format = number_format($users_amount, 0, ',', '.');
-               
+
                 $descripcion = $descripcion . ' + ' . $params['quantity'] . ' usuarios/s ($' . $users_amount_format . ')';
             }
 
@@ -68,22 +68,22 @@ class MPService
                 foreach ($modulos_seleccionados as $modulo_id) {
                     $modulo = ModulosSuscripcion::find($modulo_id);
                     $modulo_amount_format = number_format($modulo->monto, 0, ',', '.');
-                    
+
                     $modulos_amount += $modulo->monto;
                     $descripcion = $descripcion . ' + Módulo: ' . $modulo->nombre . ' ($' . $modulo_amount_format . ')';
                 }
             }
 
-            if($planSuscripcion->frequency){
+            if ($planSuscripcion->frequency) {
                 $users_amount =  $users_amount * $planSuscripcion->frequency;
                 $modulos_amount = $modulos_amount * $planSuscripcion->frequency;
             }
 
-            if( $users_amount ){
+            if ($users_amount) {
                 $monto =  $monto + $users_amount;
             }
 
-            if($modulos_amount){
+            if ($modulos_amount) {
                 $monto =  $monto + $modulos_amount;
             }
 
@@ -441,6 +441,7 @@ class MPService
                     'description' => $reason,
                     'date_created' => $date_created,
                     'date_last_updated' => $last_modified,
+                    'proceso_asociado' => 'Usuario Success',
                 ];
 
                 $suscripcionControl = $this->suscripcionControlService->insert($suscripcionData);
@@ -823,16 +824,24 @@ class MPService
                 //'plan_id' => $preapproval_plan_id,
                 //'payer_email' => $payer_email
                 //'payer_id' => $payer_id
-                'sort' =>'date_created:desc',
+                'sort' => 'date_created:desc',
             ];
-            Log::alert( $array_suscripcion);
+            Log::alert($array_suscripcion);
 
             $data_preapproval = $mercadoPago->get_preapproval_payments_search($array_suscripcion);
 
             Log::alert($data_preapproval['response']['results']);
 
-            if(isset($data_preapproval['response']) && isset($data_preapproval['response']['results']) && isset($data_preapproval['response']['results'][0])){
-                return $data_preapproval['response']['results'][0];
+            if (isset($data_preapproval['response']) && isset($data_preapproval['response']['results']) && isset($data_preapproval['response']['results'][0])) {
+                $observaciones_mp = '';
+                foreach ($data_preapproval['response']['results'] as $item) {
+                    $observaciones_mp .= 'last_modified: ' . ($item['last_modified'] ?? '') . ' - transaction_amount: ' . ($item['transaction_amount'] ?? '') . ' - status: ' . ($item['status'] ?? '') . ' - next_payment_date: ' . ($item['next_payment_date'] ?? '') . ' - reason: ' . ($item['reason'] ?? '') . ' | ';
+                }
+
+                $suscripcion_mp = $data_preapproval['response']['results'][0];
+                $suscripcion_mp['observaciones'] = $observaciones_mp;
+                Log::alert($suscripcion_mp);
+                return $suscripcion_mp;
             }
 
             return [];
