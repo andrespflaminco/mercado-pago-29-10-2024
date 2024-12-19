@@ -120,47 +120,28 @@ class SuscripcionEspecialController extends Component
 
   public function IniciarProceso()
   {
-    Log::info('Suscripcion - IniciarProceso');
-    // dd($this->slug);
-    //$this->Iniciar($this->slug);
+    Log::info('SuscripcionEspecialController - IniciarProceso');    
   }
-
-  /*
-    public function render()
-    {
-        
-      if (auth()->check()) {
-        //$this->Iniciar($this->slug);
-         
-      $event_name = "InitiateCheckout";
-      $user_id = auth()->user()->id;
-      $url = URL::current();
-      $response = $this->enviarEventoFacebook($event_name,$user_id,$url);
-      
-      return view('auth.suscripcion-especial',[
-            'slug' => $this->slug
-            ])
-       ->extends('layouts.theme-pos-especial.app')
-       ->section('content');
-    } else {
-       
-       return view('auth.suscripcion-especial',[
-            'slug' => $this->slug
-            ])
-       ->extends('layouts.theme-pos-especial.app')
-       ->section('content');
-        
-    }
-    
-    }
-    */
-
-  //public function render(Request $request, $planId = 1, $quantity = 0)
+  
   public function render()
   {
-    Log::info('Suscripcion - render');
+    Log::info('SuscripcionEspecialController - render');
 
     $urlBase = env('APP_URL');
+
+    if(auth()->user() && auth()->user()->suscripcion){
+      Log::info('SuscripcionEspecialController - render - suscripcion');
+
+      $data =  [
+        'slug' => $this->slug,
+        'url_base' => $urlBase,
+        'url_redirect' => $urlBase . '/suscripcion-configuracion' ,
+      ];
+
+      return view('auth.suscripcion-mercadopago-existente', $data)
+      ->extends('layouts.theme-pos-especial.app-base')
+      ->section('content');
+    }
     
     $plan = planes_suscripcion::where('id', $this->slug)->first();
 
@@ -170,9 +151,9 @@ class SuscripcionEspecialController extends Component
       'quantity' => $this->quantity,
       'url_base' => $urlBase,
       'url_redirect' => $urlBase . '/suscribirse/' . $this->slug . '/',
-      'user_amount_value' => config('app.USER_AMOUNT_VALUE'), // Agrega esta l¨ªnea
+      'user_amount_value' => config('app.USER_AMOUNT_VALUE'), // Agrega esta lï¿½ï¿½nea
       'users_amount' => 0,
-      'PLAN_MONTO' => $plan ? intval($plan->monto) : 18900 // Agrega esta l¨ªnea
+      'PLAN_MONTO' => $plan ? intval($plan->monto) : 18900 // Agrega esta lï¿½ï¿½nea
     ];
 
     $monto = $plan->monto;
@@ -245,7 +226,7 @@ class SuscripcionEspecialController extends Component
 
   public function Iniciar($slug)
   {
-    Log::info('Suscripcion - Iniciar');
+    Log::info('SuscripcionEspecialController - Iniciar');
 
     $user = Auth::user();
     $this->IniciarSuscripcion($slug, $user);
@@ -253,7 +234,7 @@ class SuscripcionEspecialController extends Component
 
   public function IniciarSuscripcion($plan_id, $user)
   {
-    Log::info('Suscripcion - IniciarSuscripcion');
+    Log::info('SuscripcionEspecialController - IniciarSuscripcion');
 
     $plan = planes_suscripcion::find($plan_id);
     $this->origen = $plan->origen;
@@ -466,7 +447,7 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
 
     Log::info('SuscripcionEspecialController -actualizarSuscripcion');
     Log::info($request);
-    Log::info('$suscripcion_id - ' . $suscripcion_id . ' | plan_suscripcion_id - ' . $plan_suscripcion_id . ' | users_count - ' . $users_count . ' | modulos_id - ' . $modulos_id);
+    Log::info('SuscripcionEspecialController - $suscripcion_id - ' . $suscripcion_id . ' | plan_suscripcion_id - ' . $plan_suscripcion_id . ' | users_count - ' . $users_count . ' | modulos_id - ' . $modulos_id);
 
     $suscripcionesService = new SuscripcionesService();
     $data = [
@@ -480,7 +461,7 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
 
     $preference = $suscripcionesService->actualizarSuscripcion($data);
 
-    Log::info('$preference');
+    Log::info('SuscripcionEspecialController - $preference');
     Log::info($preference);
 
     return redirect('/suscripcion-configuracion')->with('message', 'SuscripciÃ³n actualizada correctamente');
@@ -490,7 +471,7 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
   public function actualizarSuscripcion(Request $request, $suscripcion_id, $plan_suscripcion_id, $users_count = null, $modulos_id = null){
     Log::info('SuscripcionEspecialController - actualizarSuscripcion');
     Log::info($request);
-    Log::info('$suscripcion_id - ' . $suscripcion_id . ' | plan_suscripcion_id - ' . $plan_suscripcion_id . ' | users_count - ' . $users_count . ' | modulos_id - ' . $modulos_id);
+    Log::info('SuscripcionEspecialController - $suscripcion_id - ' . $suscripcion_id . ' | plan_suscripcion_id - ' . $plan_suscripcion_id . ' | users_count - ' . $users_count . ' | modulos_id - ' . $modulos_id);
 
         try {
             
@@ -553,7 +534,7 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
                     'title' => $descripcion,
                     'description' => $descripcion,
                     'quantity' => 1,
-                    'currency_id' => 'ARS', // O la moneda que est¨¦s utilizando
+                    'currency_id' => 'ARS', // O la moneda que estï¿½ï¿½s utilizando
                     'unit_price' => floatval($monto)
                 ]
             ],
@@ -601,7 +582,7 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
         
         
         } catch (Exception $e) {
-            Log::info('SuscripcionesService - actualizarSuscripcion - ' . $e->getMessage());
+            Log::info('SuscripcionEspecialController - actualizarSuscripcion - ' . $e->getMessage());
         }    
 
   }
@@ -613,13 +594,13 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
         $status = $request->query('status');
         $merchantOrderId = $request->query('merchant_order_id');
         
-        // Capturar los par¨¢metros adicionales
+        // Capturar los parï¿½ï¿½metros adicionales
         $suscripcion_id = $request->query('suscripcion_id');
         $plan_suscripcion_id = $request->query('plan_suscripcion_id');
         $users_count = $request->query('users_count');
         $modulos_id = $request->query('modulos_id');
     
-        Log::info('Checkout Success', [
+        Log::info('SuscripcionEspecialController - Checkout Success', [
             'payment_id' => $paymentId,
             'status' => $status,
             'merchant_order_id' => $merchantOrderId,
@@ -641,7 +622,7 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
         $status = $request->query('status');
         $merchantOrderId = $request->query('merchant_order_id');
 
-        Log::info('Checkout Failure', [
+        Log::info('SuscripcionEspecialController - Checkout Failure', [
             'payment_id' => $paymentId,
             'status' => $status,
             'merchant_order_id' => $merchantOrderId
@@ -659,7 +640,7 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
         $status = $request->query('status');
         $merchantOrderId = $request->query('merchant_order_id');
 
-        Log::info('Checkout Pending', [
+        Log::info('SuscripcionEspecialController - Checkout Pending', [
             'payment_id' => $paymentId,
             'status' => $status,
             'merchant_order_id' => $merchantOrderId
@@ -710,14 +691,14 @@ public function actualizarSuscripcionConfirmed(Request $request, $suscripcion_id
         $suscripcionesService->actualizarSuscripcionFlaminco($preferenciaMP);
 
         if (isset($preferenciaMP['preference']['init_point'])) {
-          Log::info('Suscripcion - se proporciona el init_point al usuario');
+          Log::info('SuscripcionEspecialController - se proporciona el init_point al usuario');
           Log::info($preferenciaMP['preference']['init_point']);
           return redirect($preferenciaMP['preference']['init_point']);
         }
       }
     }
 
-    Log::info('Suscripcion - error al procesar MP del init_point');
+    Log::info('SuscripcionEspecialController - error al procesar MP del init_point');
     return redirect('/')->with('message-error', 'error al procesar MP');
   }
 

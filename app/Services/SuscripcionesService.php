@@ -122,7 +122,7 @@ class SuscripcionesService
             if ($data['quantity'] > 0) {
                 $users_amount = $data['quantity'] * floatval(config('app.USER_AMOUNT_VALUE'));
                 $users_amount_format = number_format($users_amount, 0, ',', '.');
-                
+
                 $descripcion = $descripcion . ' + ' . $data['quantity'] . ' usuarios/s ($' . $users_amount_format . ')';
             }
 
@@ -135,7 +135,7 @@ class SuscripcionesService
                 foreach ($modulos_seleccionados as $modulo_id) {
                     $modulo = ModulosSuscripcion::find($modulo_id);
                     $modulo_amount_format = number_format($modulo->monto, 0, ',', '.');
-                    
+
                     $modulos_amount += $modulo->monto;
                     $descripcion = $descripcion . ' + Módulo: ' . $modulo->nombre . ' ($' . $modulo_amount_format . ')';
                 }
@@ -144,16 +144,16 @@ class SuscripcionesService
             $urlBase = config('app.APP_URL');
             $urlSuccess = $urlBase . '/mp-success';
 
-            if($planSuscripcion->frequency){
+            if ($planSuscripcion->frequency) {
                 $users_amount =  $users_amount * $planSuscripcion->frequency;
                 $modulos_amount = $modulos_amount * $planSuscripcion->frequency;
             }
 
-            if( $users_amount ){
+            if ($users_amount) {
                 $monto =  $monto + $users_amount;
             }
 
-            if($modulos_amount){
+            if ($modulos_amount) {
                 $monto =  $monto + $modulos_amount;
             }
 
@@ -350,7 +350,7 @@ class SuscripcionesService
     }
 
     function get_preapproval_payments_search($suscripcion_id)
-    {        
+    {
         $suscripcion = Suscripcion::where('suscripcion_id', $suscripcion_id)->first();
         $data_preapproval_array = $this->MPService->get_preapproval_payments_search($suscripcion);
 
@@ -420,9 +420,32 @@ class SuscripcionesService
 
         ];
 
+        $sysdate = date("Y-m-d H:i:s");
+        $user_update = null;
+
+        if ($suscripcion->user_id) {
+            $user_update = User::find($suscripcion->user_id);
+        }
+
         if (isset($data['status']) && $data['status'] == 'authorized') {
-            $data_update['suscripcion_status'] = 'activ';
-            $data_update['cobro_status'] = 'pagad';
+            if ($user_update) {
+                $user_update->confirmed = 1;
+                $user_update->confirmed_at = $sysdate;
+                $user_update->save();
+            }
+
+            $data_update['suscripcion_status'] = 'activa';
+            $data_update['cobro_status'] = 'pendiente';
+
+            if (isset($data['last_charged_date_mp']) && $data['last_charged_date_mp'] && !empty($data['last_charged_date_mp']) && $data['last_charged_date_mp'] != null) {
+                $data_update['cobro_status'] = 'pagada';
+            }
+        } else {
+            if ($user_update) {
+                $user_update->confirmed = 0;
+                $user_update->confirmed_at = null;
+                $user_update->save();
+            }
         }
 
         try {
@@ -444,7 +467,7 @@ class SuscripcionesService
 
         if ($SuscripcionControl) {
 
-            if ($SuscripcionControl->last_charged_date_mp == $data['last_charged_date']) {
+            if (isset($data['last_charged_date']) && $SuscripcionControl->last_charged_date_mp == $data['last_charged_date']) {
                 return null;
             }
         }

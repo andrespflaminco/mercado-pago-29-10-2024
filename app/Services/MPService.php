@@ -823,6 +823,7 @@ class MPService
                 //'plan_id' => $preapproval_plan_id,
                 //'payer_email' => $payer_email
                 //'payer_id' => $payer_id
+                'sort' =>'date_created:desc',
             ];
             Log::alert( $array_suscripcion);
 
